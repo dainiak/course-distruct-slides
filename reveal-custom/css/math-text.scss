@@ -1,0 +1,17 @@
+.theorem, .definition, .lemma, .proposition, .corollary {
+  width: 100%;
+
+  .title {
+    font-weight: bold;
+    text-align: left;
+  }
+  .statement {
+    width: 100%;
+    font-palette: normal;
+    text-align: left;
+  }
+}
+
+.proof-start {
+  content: "Доказательство:";
+}
