@@ -3,6 +3,7 @@
 
   .title {
     font-weight: bold;
+    text-decoration: underline dotted darkgray;
     text-align: left;
   }
   .statement {
@@ -24,4 +25,9 @@
   width: 100%;
   text-align: left;
   font-weight: normal;
+}
+
+span.term {
+  text-decoration: underline dashed teal;
+  //text-decoration-thickness: 2px;
 }

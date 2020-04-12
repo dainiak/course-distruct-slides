@@ -246,6 +246,7 @@ ul.discharging > li:nth-last-of-type(1):before {
 }
 .theorem .title, .definition .title, .lemma .title, .proposition .title, .corollary .title {
   font-weight: bold;
+  text-decoration: underline dotted darkgray;
   text-align: left;
 }
 .theorem .statement, .definition .statement, .lemma .statement, .proposition .statement, .corollary .statement {
@@ -262,6 +263,10 @@ ul.discharging > li:nth-last-of-type(1):before {
 .proof .title {
   font-weight: bold;
   text-align: left;
+}
+
+span.term {
+  text-decoration: underline dashed teal;
 }
 
 .green {

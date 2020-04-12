@@ -25,6 +25,7 @@ let RevealInking = window.RevealInking || (function (){
     let MATH_SHADOW = options.mathShadow || false;
     let DISPLAY_STYLE_MATH = options.mathDisplayStyle !== false;
     let FORMULAE_SUPPORT_ENABLED = options.math !== false;
+    let CONTROLS_SHADOW = '0 0 5px black';
     let MATH_MACROS = options.mathMacros || [];
     let PREDEFINED_CANVAS_CONTENT = options.inkingCanvasContent;
     let mousePosition = {};
@@ -216,7 +217,7 @@ let RevealInking = window.RevealInking || (function (){
                 canvas.isDrawingMode = false;
                 isInEraseMode = true;
                 canvas.selection = false;
-                document.querySelector('.ink-erase').style.textShadow = '0 0 5px white';
+                document.querySelector('.ink-erase').style.textShadow = CONTROLS_SHADOW;
             }
         }
         function leaveDeletionMode(){
@@ -492,7 +493,7 @@ let RevealInking = window.RevealInking || (function (){
 
         document.querySelector('.ink-clear').onmousedown = function(event){
             let btn = event.target;
-            btn.style.textShadow = '0 0 5px white';
+            btn.style.textShadow = CONTROLS_SHADOW;
             setTimeout( function(){btn.style.textShadow = '';}, 200 );
             canvas.clear();
         };
@@ -515,7 +516,7 @@ let RevealInking = window.RevealInking || (function (){
             else {
                 destroySpotlight();
                 cContainer.style.display = 'none';
-                document.querySelector('.ink-hidecanvas').style.textShadow = '0 0 5px black';
+                document.querySelector('.ink-hidecanvas').style.textShadow = CONTROLS_SHADOW;
             }
         };
 

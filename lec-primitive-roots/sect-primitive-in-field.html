@@ -1,37 +1,57 @@
 <section>
     <div class="lemma fragment">
-        <div class="title">Количество элементов заданного порядка</div>
-        <div class="statement">Если в \(\Fstar\) есть элементы порядка \(k,\) то их ровно \(\phi(k).\)</div>
+        <div class="title">Лемма “\(>0\implies =\euler\)”</div>
+        <div class="statement">Если в \(\Fstar\) есть элементы порядка \(k,\) то их ровно \(\euler(k).\)</div>
     </div>
-    <hr>
     <div class="proof fragment">
+        <hr>
         <div class="title">Доказательство.</div>
         <p class="fragment">
             Пусть \(\ord a = k\). Пусть \(A:=\{a^0,\,\dots,\,a^{k-1}\}\).
         </p>
         <p class="fragment">
-            Для \(a^j\in A\) имеем
+            Пусть \(P(x):= x^k - 1\). Для \(a^j\in A\) имеем
             \[
-                \step{  (a^j)^k - 1     }
+                P(a^j) = (a^j)^k - 1
                 \step{  = (a^k)^j - 1   }
-                \step{  = 1^j - 1       }
-                \step{  = 0,            }
+                \step{  = 1^j - 1  = 0, }
             \]
         </p>
         <p class="fragment">
-            то есть каждый \(a^j\in A\) — корень многочлена \(x^k-1\).
-            Так как \(|A|=k=\deg (x^k-1)\), то т. Лагранжа имеем, что \(A\) — это множество
-            <em>всех</em> корней этого многочлена.
+            то есть \(A\subseteq \roots(P)\).
+        </p>
+        <p class="fragment">
+            Так как \(|A|=k=\deg P\), то \(\roots(P) = A\).
         </p>
     </div>
 </section>
+
+<section>
+    <div class="proof">
+        <p>
+            Пусть \(\ord a = k\). Пусть \(K:=\{a\in\Fstar:\: \ord a = k\}\).
+            Тогда \(K\subseteq \{a^0,\,\dots,\,a^{k-1}\}\).
+        </p>
+        <p class="fragment">
+            Если \(m\le n\) и \(\GCD(m,\,k) = 1\), то
+                \[\forall\ell\; (\ell \lt k \implies (a^m)^\ell \neq 1),\]
+            иначе было бы \(a^{\ell m} = 1\) при том, что \(\ord a \notdivides \ell m\).
+        </p>
+        <p class="fragment">
+            Видно теперь, что \[K=\{a^m\mid \GCD(m,\,k) = 1\},\]
+            а значит, \(\card K = \euler(k).\)
+        </p>
+    </div>
+</section>
+
+
 <section>
     <div class="lemma">
         <div class="title">Сумма значений функции Эйлера</div>
         <div class="statement">
             Для любого \(n\) имеем
             \[
-                \sum_{k:\:k\divides n}\euler(k)=n
+                \sum_{k:\:k\divides n}\euler(k)=n.
             \]
         </div>
     </div>
@@ -47,13 +67,31 @@
 </section>
 <section>
     <div class="proof">
-        <p>Пусть  \(K:=\{\ord a\mid a\in \Fstar\}\),  и  \(n:=|\Fstar|\).</p>
+        <p>Пусть  \(\calO:=\{\ord a\mid a\in \Fstar\}\),  и  \(n:=\card\Fstar\).</p>
         <p>
-            Очевидно, \(K\subseteq D_n = \{ d:\: d\divides n \}\).
+            Очевидно, \(\calO\subseteq D_n = \{ d:\: d\divides n \}\).
             \[
-                |\Fstar| = \sum_{k\in K} \euler(k) \pstep{\green{\le} \sum_{k\in D_n} \euler(k)=|\Fstar|,}
+                |\Fstar| = \sum_{k\in \calO} \euler(k) \pstep{\green{\le} \sum_{k\in D_n} \euler(k)=\card\Fstar,}
             \]
-            <span class="fragment">а стало быть, \(K=D_n\).</span>
+            <span class="fragment">а стало быть, \(\calO=D_n\).</span>
+        </p>
+    </div>
+</section>
+
+<section>
+    <div class="theorem">
+        <div class="title">Теорема</div>
+        <div class="statement">
+            В любом поле \(\bbF\) есть <span class="term">примитивный элемент</span>,
+            то есть такой \(\alpha\in\Fstar\), что \[
+            \Fstar = \{\alpha^0,\,\alpha^1,\,\dots,\,\alpha^{\card\Fstar-1}\}.
+            \]
+        </div>
+    </div>
+    <div class="proof fragment">
+        <div class="title">Доказательство.</div>
+        <p>
+            Количество элементов порядка \(\card\Fstar\) равно \(\euler(\card\Fstar)\ge 1\).
         </p>
     </div>
 </section>
