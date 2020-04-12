@@ -9,6 +9,8 @@ let RevealMath = window.RevealMath || (function() {
 
 	options.mathjaxUrl = options.mathjaxUrl || 'https://cdn.jsdelivr.net/npm/mathjax@3.0.5/es5/tex-svg-full.js';
 
+	options.resetFragmentIndicesAfterTypeset = (options.resetFragmentIndicesAfterTypeset !== false);
+
     window.MathJax = {
         options: {
             renderActions: {
@@ -186,6 +188,15 @@ let RevealMath = window.RevealMath || (function() {
             typesetMathInSVG();
         }
         MathJax.typeset();
+        Array.prototype.slice.call( document.querySelectorAll( 'mjx-assistive-mml .fragment' )).forEach(function( fragment, i ) {
+            fragment.classList.remove('fragment')
+        });
+        if(options.resetFragmentIndicesAfterTypeset) {
+            Array.prototype.slice.call(document.querySelectorAll('.fragment')).forEach(function (fragment, i) {
+                fragment.removeAttribute('data-fragment-index');
+            });
+        }
+        Reveal.layout();
     }
 
 
