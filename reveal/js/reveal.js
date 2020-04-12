@@ -4848,6 +4848,7 @@
 		if( currentSlide && config.fragments ) {
 
 			var fragments = sortFragments( currentSlide.querySelectorAll( '.fragment' ) );
+
 			if( fragments.length ) {
 
 				// If no index is specified, find the current

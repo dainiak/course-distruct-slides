@@ -11,12 +11,13 @@
     <link rel="stylesheet" href="../reveal-custom/css/theme/black.css" id="theme">
     <link rel="stylesheet" href="../reveal/lib/css/zenburn.css">
     <link rel="stylesheet" href="../reveal-custom/css/extras.css">
-    <link rel="stylesheet" href="../reveal-custom/css/fragments.css">
 </head>
 <body>
 <div class="reveal"><div class="slides">
     <section title="Титульный слайд" data-external="sect-title.html"></section>
     <section title="Конечные поля" data-external="sect-fields-defs.html"></section>
+    <section title="Теорема Лагранжа о корнях многочленов" data-external="sect-lagrange-theorem.html"></section>
+    <section title="Кол-во элементов заданного порядка" data-external="sect-primitive-in-field.html"></section>
 </div></div>
 
 <script src="../reveal/js/reveal.js"></script>
@@ -41,7 +42,13 @@
             titleSelector: 'h1,h2,h3,h4,h5,h6,figcaption'
         },
         math: {
-            svgMathEnabled: true
+            svgMathEnabled: true,
+            macros: {
+                Fstar: "{\\mathbb{F}^*}",
+                divides: "{\\mathbin{\\:\\!\\vert\\:\\!}}",
+                ord: "\\operatorname{ord}",
+                euler: "\\varphi"
+            }
         },
         inking: {
             mathRenderer: 'MathJax',

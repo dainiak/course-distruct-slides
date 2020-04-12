@@ -13,5 +13,15 @@
 }
 
 .proof-start {
-  content: "Доказательство:";
+}
+
+.proof {
+  .title {
+    font-weight: bold;
+    text-align: left;
+  }
+
+  width: 100%;
+  text-align: left;
+  font-weight: normal;
 }

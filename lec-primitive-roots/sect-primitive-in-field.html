@@ -1,0 +1,59 @@
+<section>
+    <div class="lemma fragment">
+        <div class="title">Количество элементов заданного порядка</div>
+        <div class="statement">Если в \(\Fstar\) есть элементы порядка \(k,\) то их ровно \(\phi(k).\)</div>
+    </div>
+    <hr>
+    <div class="proof fragment">
+        <div class="title">Доказательство.</div>
+        <p class="fragment">
+            Пусть \(\ord a = k\). Пусть \(A:=\{a^0,\,\dots,\,a^{k-1}\}\).
+        </p>
+        <p class="fragment">
+            Для \(a^j\in A\) имеем
+            \[
+                \step{  (a^j)^k - 1     }
+                \step{  = (a^k)^j - 1   }
+                \step{  = 1^j - 1       }
+                \step{  = 0,            }
+            \]
+        </p>
+        <p class="fragment">
+            то есть каждый \(a^j\in A\) — корень многочлена \(x^k-1\).
+            Так как \(|A|=k=\deg (x^k-1)\), то т. Лагранжа имеем, что \(A\) — это множество
+            <em>всех</em> корней этого многочлена.
+        </p>
+    </div>
+</section>
+<section>
+    <div class="lemma">
+        <div class="title">Сумма значений функции Эйлера</div>
+        <div class="statement">
+            Для любого \(n\) имеем
+            \[
+                \sum_{k:\:k\divides n}\euler(k)=n
+            \]
+        </div>
+    </div>
+    <hr>
+    <div class="proof fragment">
+        <div class="title">Доказательство: сокращаем дроби!</div>
+        \[n=\{\tfrac{1}{n},\,\tfrac{2}{n},\,\dots,\,\tfrac{n}{n}\}=\calN\]
+        <p class="fragment">
+            Видим, что ровно \(\euler(k)\) элементов множества \(\calN\)
+            представимы несократимыми дробями со знаменателем \(k\) (и, конечно, \(k\divides n\)).
+        </p>
+    </div>
+</section>
+<section>
+    <div class="proof">
+        <p>Пусть  \(K:=\{\ord a\mid a\in \Fstar\}\),  и  \(n:=|\Fstar|\).</p>
+        <p>
+            Очевидно, \(K\subseteq D_n = \{ d:\: d\divides n \}\).
+            \[
+                |\Fstar| = \sum_{k\in K} \euler(k) \pstep{\green{\le} \sum_{k\in D_n} \euler(k)=|\Fstar|,}
+            \]
+            <span class="fragment">а стало быть, \(K=D_n\).</span>
+        </p>
+    </div>
+</section>

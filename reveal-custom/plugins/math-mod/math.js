@@ -10,6 +10,7 @@ let RevealMath = window.RevealMath || (function() {
 	options.mathjaxUrl = options.mathjaxUrl || 'https://cdn.jsdelivr.net/npm/mathjax@3.0.5/es5/tex-svg-full.js';
 
 	options.resetFragmentIndicesAfterTypeset = (options.resetFragmentIndicesAfterTypeset !== false);
+    options.macros = options.macros || [];
 
     window.MathJax = {
         options: {
@@ -75,12 +76,15 @@ let RevealMath = window.RevealMath || (function() {
                 emptyset: "\\varnothing",
                 epsilon: "\\varepsilon",
                 step: ["\\class{fragment step}{#1}", 1],
+                pstep: ["\\class{fragment}{#1}", 1],
                 zoomable: ["\\class{zoomable}{#1}", 1],
                 green: ["\\class{green}{#1}", 1],
                 red: ["\\class{red}{#1}", 1]
             }
         }
     };
+
+    Object.assign(window.MathJax.tex.macros, options.macros);
 
     function typesetMathInSVG() {
         function replaceText(textNode, svgMath, textNodeContainer, justification) {

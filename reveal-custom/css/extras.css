@@ -254,8 +254,14 @@ ul.discharging > li:nth-last-of-type(1):before {
   text-align: left;
 }
 
-.proof-start {
-  content: "Доказательство:";
+.proof {
+  width: 100%;
+  text-align: left;
+  font-weight: normal;
+}
+.proof .title {
+  font-weight: bold;
+  text-align: left;
 }
 
 .green {
