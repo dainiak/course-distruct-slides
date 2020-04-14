@@ -1,0 +1,68 @@
+<section data-menu-title="Первообразные корни">
+    <div class="definition fragment">
+        <div class="statement">
+            <span class="term">Первообразный корень</span> в \(\bbZ_m\) — это вычет \(r\),
+            такой, что \(\{r^0,\,r^1,\,\dots,\,r^{p-2}\}=\bbZ_m^*\).
+        </div>
+    </div>
+    <div class="proposition fragment">
+        <hr>
+        <div class="title">Существование п.к. по простому модулю</div>
+        <div class="statement">
+            При \(p\in\bbP\) в \(\bbZ_p\) есть ровно \(\euler(p-1)\) первообразных корней.
+        </div>
+    </div>
+    <div class="proposition fragment">
+        <hr>
+        <div class="title">Существование п.к. по составным модулям</div>
+        <div class="statement">
+            При \(m\notin\bbP\cup\{4\}\) в \(\bbZ_m\) есть первообразный корень т. и т.т.,
+            когда \(m = p^\ell\) или \(m=2p^\ell\) для \(p\in\bbP\setminus\{2\}\) и \(\ell\in\bbN\).
+        </div>
+
+        <div class="statement">
+            Внимание! Первообразный корень в \(\bbZ_{p^\ell}\) — это вовсе не то же,
+            что примитивный элемент в \(\bbF_{p^\ell}\), поскольку структура этого поля
+            отличается от структуры кольца вычетов.
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="proposition">
+        <div class="statement">
+            Пусть \(\gamma\) — п.к. по модулю \(p\). Тогда
+            \[
+                \exists t: \quad (\gamma+pt)^{p-1} = 1 + pu,\text{ причём } p\notdivides u.
+            \]
+            Вычет \(\gamma + pt\) будет п.к. по модулю \(p^\ell\) при любом \(\ell\).
+        </div>
+    </div>
+    <hr>
+    <div class="proof">
+        Пусть \(q:=(\gamma^{p-1} - 1)/p\) и пусть \(t=1+\gamma q\). Имеем
+        \[  \begin{array}{rl}
+            (\gamma+pt)^{p-1} &\step{= \gamma^{p-1} + (p-1)\cdot \gamma^{p-2}\cdot pt + p^2\cdot \any} \\
+            &\step{= 1 + p\cdot (q-\gamma^{p-2}\cdot t + p\cdot \any)}\\
+            &\step{= 1 + p\cdot (q-\gamma^{p-2} - \gamma^{p-1}\cdot q + p\cdot \any)}\\
+            &\next{= 1 + p\cdot (-\gamma^{p-2} + p\cdot \any)}
+            \end{array}
+        \]
+    </div>
+</section>
+
+<section>
+    <div class="proof">
+        \[
+            (\gamma+pt)^{p-1} = 1 + pu,\text{ где } p\notdivides u.
+        \]
+        Тогда
+        \[ \begin{array}{rl}
+            (\gamma+pt)^{p\cdot(p-1)} & = (1 + pu)^p = 1 + p^2u + p^4\cdot\any\\
+            & \next{= 1 + p^2 u_1, \text{ где } p\notdivides u_1. }
+        \end{array} \]
+
+        <p class="fragment">Аналогично
+            \[ (\gamma+pt)^{p^k\cdot(p-1)} = 1 + p^{k+1} u_k, \text{ где } p\notdivides u_k. \]</p>
+    </div>
+</section>

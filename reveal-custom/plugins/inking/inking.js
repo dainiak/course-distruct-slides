@@ -18,6 +18,7 @@ let RevealInking = window.RevealInking || (function (){
     let RENDERING_RESOLUTION = options.renderingResolution || 1;
     let CANVAS_ABOVE_CONTROLS = !!(options.canvasAboveControls);
     let CONTROLS_COLOR = options.controlsColor || 'rgb(0,0,0)';
+    let CONTROLS_SHADOW = options.controlsShadow || '0 0 5px black';
     let CONTROLS = options.controls !== false;
     let INK_COLOR = options.inkColor;
     let INK_SHADOW = options.inkShadow !== undefined ? options.inkShadow : 'rgb(50,50,50)';
@@ -25,7 +26,6 @@ let RevealInking = window.RevealInking || (function (){
     let MATH_SHADOW = options.mathShadow || false;
     let DISPLAY_STYLE_MATH = options.mathDisplayStyle !== false;
     let FORMULAE_SUPPORT_ENABLED = options.math !== false;
-    let CONTROLS_SHADOW = '0 0 5px black';
     let MATH_MACROS = options.mathMacros || [];
     let PREDEFINED_CANVAS_CONTENT = options.inkingCanvasContent;
     let mousePosition = {};

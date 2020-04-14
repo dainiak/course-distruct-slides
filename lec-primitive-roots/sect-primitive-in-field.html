@@ -1,4 +1,4 @@
-<section>
+<section data-menu-title="Примитивные элементы в полях">
     <div class="lemma fragment">
         <div class="title">Лемма “\(>0\implies =\euler\)”</div>
         <div class="statement">Если в \(\Fstar\) есть элементы порядка \(k,\) то их ровно \(\euler(k).\)</div>
@@ -13,8 +13,8 @@
             Пусть \(P(x):= x^k - 1\). Для \(a^j\in A\) имеем
             \[
                 P(a^j) = (a^j)^k - 1
-                \step{  = (a^k)^j - 1   }
-                \step{  = 1^j - 1  = 0, }
+                \next{  = (a^k)^j - 1   }
+                \next{  = 1^j - 1  = 0, }
             \]
         </p>
         <p class="fragment">
@@ -45,7 +45,7 @@
 </section>
 
 
-<section>
+<section data-menu-title="Сумма значений функции Эйлера">
     <div class="lemma">
         <div class="title">Сумма значений функции Эйлера</div>
         <div class="statement">
@@ -78,7 +78,7 @@
     </div>
 </section>
 
-<section>
+<section data-menu-title="Существование примитивных элементов">
     <div class="theorem">
         <div class="title">Теорема</div>
         <div class="statement">
@@ -93,5 +93,21 @@
         <p>
             Количество элементов порядка \(\card\Fstar\) равно \(\euler(\card\Fstar)\ge 1\).
         </p>
+    </div>
+</section>
+
+<section data-menu-title="Дискретное логарифмирование">
+    <div class="proposition">
+        <div class="statement">
+            Если в конечном поле зафиксировать примитивный элемент \(\alpha,\)
+            то для любого \(x\in \bbF\setminus\{0\}\) можно корректно определить
+            <span class="term">дискретный логарифм</span>: \(\log_\alpha x \), обладающий
+            некоторыми свойствами обычного логарифма:
+            <ul>
+                <li class="fragment">\(\log_\alpha (xy)=(\log_\alpha x + \log_\alpha y)\vstep{?}\next{\bmod \card\Fstar,}\)</li>
+                <li class="fragment">\(x^{\log_\alpha y}=y^{\log_\alpha x},\)</li>
+                <li class="fragment">\(\log_\alpha x = (\log_\beta x \cdot \log_\alpha \beta) \bmod\card\Fstar.\)</li>
+            </ul>
+        </div>
     </div>
 </section>

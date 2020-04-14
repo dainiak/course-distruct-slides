@@ -34,7 +34,10 @@ let RevealMath = window.RevealMath || (function() {
                 window.Reveal.typesetMath();
             }
         },
-        svg: { fontCache: "none" },
+        svg: {
+            fontCache: "none",
+            mtextInheritFont: (options.mtextInheritFont === true)
+        },
         tex: {
             inlineMath: [["\\(", "\\)"]],
             displayMath: [["\\[", "\\]"]],
@@ -75,8 +78,9 @@ let RevealMath = window.RevealMath || (function() {
                 hat: "\\widehat",
                 emptyset: "\\varnothing",
                 epsilon: "\\varepsilon",
+                next: ["\\class{fragment}{#1}", 1],
                 step: ["\\class{fragment step}{#1}", 1],
-                pstep: ["\\class{fragment}{#1}", 1],
+                vstep: ["\\rlap{\\class{fragment inactive-invisible}{#1}}", 1],
                 zoomable: ["\\class{zoomable}{#1}", 1],
                 green: ["\\class{green}{#1}", 1],
                 red: ["\\class{red}{#1}", 1]

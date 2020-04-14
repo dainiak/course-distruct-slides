@@ -131,7 +131,8 @@
 }
 
 .reveal .slides section {
-  /* Underline animation by Josh Broton, see http://bradsknutson.com/blog/css-sliding-underline/   */
+  /* Sliding underline animation by Josh Broton, see http://bradsknutson.com/blog/css-sliding-underline/   */
+  /* This one is from https://speckyboy.com/underline-text-effects-css/ */
 }
 .reveal .slides section .fragment.step, .reveal .slides section ul.steps li.fragment {
   transition-duration: 0.5s;
@@ -151,6 +152,18 @@
 }
 .reveal .slides section .fragment.vanishing.visible.current-fragment {
   display: inherit;
+}
+.reveal .slides section .fragment.inactive-invisible {
+  transition-duration: 0s;
+  opacity: 0;
+}
+.reveal .slides section .fragment.inactive-invisible.visible {
+  transition-duration: 0s;
+  opacity: 0;
+}
+.reveal .slides section .fragment.inactive-invisible.visible.current-fragment {
+  transition-duration: 0.5s;
+  opacity: 1;
 }
 .reveal .slides section .reveal .slides section .fragment.void {
   display: inherit;
@@ -174,13 +187,36 @@
   height: 3px;
   width: 0;
   background: transparent;
-  transition: width 0.5s ease, background-color 0.5s ease;
+  transition: width 0.5s cubic-bezier(1, 0.25, 0, 0.75), background-color 0.5s cubic-bezier(1, 0.25, 0, 0.75), opacity 0s;
   visibility: visible;
   opacity: 1;
 }
 .reveal .slides section .fragment.sliding-underline.visible:after {
   width: 100%;
-  background: #068ee9;
+  background-color: #068ee9;
+}
+.reveal .slides section .fragment.drop-underline {
+  display: inline-block;
+  visibility: visible;
+  opacity: 1;
+}
+.reveal .slides section .fragment.drop-underline:after {
+  content: "";
+  opacity: 0;
+  visibility: visible;
+  display: block;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #068ee9;
+  transform: translateY(-0.2em);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+}
+.reveal .slides section .fragment.drop-underline.visible:after {
+  opacity: 1;
+  transform: translateY(0);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
 }
 
 @font-face {
@@ -251,8 +287,11 @@ ul.discharging > li:nth-last-of-type(1):before {
 }
 .theorem .statement, .definition .statement, .lemma .statement, .proposition .statement, .corollary .statement {
   width: 100%;
-  font-palette: normal;
+  font-weight: normal;
   text-align: left;
+}
+.theorem li, .definition li, .lemma li, .proposition li, .corollary li {
+  padding-bottom: 1em;
 }
 
 .proof {
@@ -263,6 +302,9 @@ ul.discharging > li:nth-last-of-type(1):before {
 .proof .title {
   font-weight: bold;
   text-align: left;
+}
+.proof li {
+  padding-bottom: 1em;
 }
 
 span.term {
