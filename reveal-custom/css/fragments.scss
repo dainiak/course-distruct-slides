@@ -20,6 +20,16 @@
     }
   }
 
+  .fragment.vstep {
+    display: none;
+    &.visible {
+      display: none;
+    }
+    &.visible.current-fragment {
+      display: inline;
+    }
+  }
+
   .fragment.inactive-invisible {
     transition-duration: 0s;
     opacity: 0;

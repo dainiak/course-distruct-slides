@@ -37,6 +37,18 @@ $listItemPadding: 1em;
   }
 }
 
+div.qed {
+  width: 100%;
+  display: inline-block;
+  text-align: right;
+  transform: translateY(-1.5em);
+  &:before {
+    display: block;
+    width: 100%;
+    content: '\220E';
+  }
+}
+
 span.term {
   text-decoration: underline dashed teal;
   //text-decoration-thickness: 2px;

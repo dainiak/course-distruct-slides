@@ -1,8 +1,9 @@
 <section data-menu-title="Первообразные корни">
     <div class="definition fragment">
         <div class="statement">
-            <span class="term">Первообразный корень</span> в \(\bbZ_m\) — это вычет \(r\),
-            такой, что \(\{r^0,\,r^1,\,\dots,\,r^{p-2}\}=\bbZ_m^*\).
+            <p><span class="term">Первообразный корень</span> в \(\bbZ_m\) — это вычет \(r\),
+                такой, что \(\{r^0,\,r^1,\,\dots,\,r^{p-2}\}=\bbZ_m^*\).</p>
+            <p>Иначе говоря, \(\ord r = \euler(m)\).</p>
         </div>
     </div>
     <div class="proposition fragment">
@@ -40,14 +41,16 @@
     </div>
     <hr>
     <div class="proof">
-        Пусть \(q:=(\gamma^{p-1} - 1)/p\) и пусть \(t=1+\gamma q\). Имеем
-        \[  \begin{array}{rl}
+        Пусть \(q:=(\gamma^{p-1} - 1)/p \in\bbZ\)<span class="fragment vstep"> (МТФ)</span>
+        <span class="fragment">, и пусть \(t=1+\gamma q\).</span>
+        <p class="fragment">Имеем
+            \[ \begin{array}{rl}
             (\gamma+pt)^{p-1} &\step{= \gamma^{p-1} + (p-1)\cdot \gamma^{p-2}\cdot pt + p^2\cdot \any} \\
             &\step{= 1 + p\cdot (q-\gamma^{p-2}\cdot t + p\cdot \any)}\\
             &\step{= 1 + p\cdot (q-\gamma^{p-2} - \gamma^{p-1}\cdot q + p\cdot \any)}\\
             &\next{= 1 + p\cdot (-\gamma^{p-2} + p\cdot \any)}
             \end{array}
-        \]
+            \]</p>
     </div>
 </section>
 
@@ -62,7 +65,30 @@
             & \next{= 1 + p^2 u_1, \text{ где } p\notdivides u_1. }
         \end{array} \]
 
-        <p class="fragment">Аналогично
-            \[ (\gamma+pt)^{p^k\cdot(p-1)} = 1 + p^{k+1} u_k, \text{ где } p\notdivides u_k. \]</p>
+        <p class="fragment">Аналогично для любого \(k\in\bbN\) имеем
+            \[ (\gamma+pt)^{p^k\cdot(p-1)} = 1 + p^{k+1} u_k, \text{ где } p\notdivides u_k. \]
+        </p>
+    </div>
+</section>
+
+<section>
+    <div class="proof">
+        <p>
+            Пусть \(\beta := \gamma+pt\). Для любого \(k\in\bbN\) имеем
+            \[ \beta^{p^k\cdot(p-1)} = 1 + p^{k+1} u_k\;\neqmod{p^{k+2}}\; 1. \]
+        </p>
+        <p class="fragment">
+            Пусть в \(\bbZ_{p^\ell}\) выполнено \(\ord\beta=s\). Тогда \[
+            s\;\divides\; \card{\bbZ_{p^\ell}} = \euler(p^\ell)=p^{\ell-1}(p-1). \]
+        </p>
+        <p class="fragment">
+            С другой стороны,
+            \[ \beta^s \eqmod{p^\ell} 1 \implies \beta^s \eqmod{p} 1 \next{\implies (p-1)\divides s.}\]
+        </p>
+        <p class="fragment">
+            Стало быть, \(s=p^k(p-1)\), где \(0\le k\le\ell-1\).
+        </p>
+        <p class="fragment">Но если \(k\le \ell-2\), то \(\beta^s\neqmod{p^{k+2}} 1\implies \beta^s\neqmod{p^\ell} 1\).</p>
+        <div class="qed fragment"></div>
     </div>
 </section>

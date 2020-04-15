@@ -153,6 +153,15 @@
 .reveal .slides section .fragment.vanishing.visible.current-fragment {
   display: inherit;
 }
+.reveal .slides section .fragment.vstep {
+  display: none;
+}
+.reveal .slides section .fragment.vstep.visible {
+  display: none;
+}
+.reveal .slides section .fragment.vstep.visible.current-fragment {
+  display: inline;
+}
 .reveal .slides section .fragment.inactive-invisible {
   transition-duration: 0s;
   opacity: 0;
@@ -305,6 +314,18 @@ ul.discharging > li:nth-last-of-type(1):before {
 }
 .proof li {
   padding-bottom: 1em;
+}
+
+div.qed {
+  width: 100%;
+  display: inline-block;
+  text-align: right;
+  transform: translateY(-1.5em);
+}
+div.qed:before {
+  display: block;
+  width: 100%;
+  content: "∎";
 }
 
 span.term {

@@ -55,16 +55,25 @@
                 euler: "\\varphi",
                 card: ["\\lvert #1 \\rvert", 1],
                 GCD: "\\mathrm{GCD}",
-                any: "\u25A7"
+                any: "\u25A7",
+                eqmod: ["\\overset{#1}{=}", 1],
+                neqmod: ["\\overset{\\scriptsize{#1}}{\\neq}", 1],
             }
         },
         inking: {
-            mathRenderer: 'MathJax',
-            mathShadow: true,
-            mathColor: 'rgb(0,255,0)',
-            mathDisplayStyle: true,
-            //inkingCanvasContent: predefinedSlideContent,
+            controls: {
+                opacity: 0.8
             },
+            math: {
+                shadow: true,
+                color: 'ink',
+                displayStyle: true
+            },
+            ink: {
+                color: ['green', 'red', 'teal']
+            }
+            //inkingCanvasContent: predefinedSlideContent,
+        },
         highlighting: {
             editorInPlace: true
         },
