@@ -59,9 +59,7 @@ let RevealInking = window.RevealInking || (function (){
         SPOTLIGHT: options.hotkeys.spotlight || 'x'
     };
 
-    let currentFormula = null;
     let currentImage = null;
-    let currentMathColor = null;
     let isInEraseMode = false;
     let isMouseLeftButtonDown = false;
     let formulaRenderingDiv = null;
@@ -399,17 +397,24 @@ let RevealInking = window.RevealInking || (function (){
             }
         }
 
-        canvas.on( 'mouse:down', function(options) {
+        canvas.on('mouse:down', function(options) {
             isMouseLeftButtonDown = true;
             mousePosition.x = options.e.layerX;
             mousePosition.y = options.e.layerY;
-            if(options.e.altKey)
+            if(SPOTLIGHT_ENABLED && options.e.altKey) {
                 createSpotlight();
+            }
+            else {
+                if(options.target && options.target.mathFormula) {
+                    currentImage = options.target;
+                }
+            }
         });
         canvas.on('mouse:up', function(options) {
             isMouseLeftButtonDown = false;
-            if(options.e.altKey)
+            if(SPOTLIGHT_ENABLED && options.e.altKey) {
                 destroySpotlight();
+            }
         });
 
         canvas.on('selection:cleared', function() {
@@ -437,7 +442,7 @@ let RevealInking = window.RevealInking || (function (){
                     canvas.getActiveObjects().forEach(function (obj) {
                         canvas.remove(obj);
                     });
-                    canvas.discardActiveObject();
+                    canvas.discardActiveObject().requestRenderAll();
                 }
             }
         });
@@ -584,11 +589,14 @@ let RevealInking = window.RevealInking || (function (){
         }
 
         function createNewFormulaWithQuery(){
-            console.log(canvas.getActiveObjects().length);
-            if(canvas.getActiveObjects().length > 1) {
-                currentFormula = null;
-                currentImage = null;
+            let currentFormula = null;
+            let currentMathColor = null;
+
+            if(currentImage && canvas.getActiveObject() == currentImage){
+                currentMathColor = currentImage.mathColor;
+                currentFormula = currentImage.mathFormula;
             }
+
             let mathColor = (currentFormula && currentMathColor) || (MATH_COLOR === 'ink' ? CURRENT_INK_COLOR : MATH_COLOR);
             document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + mathColor;
 
@@ -623,10 +631,12 @@ let RevealInking = window.RevealInking || (function (){
                         ? currentImage.top
                         : (mousePosition.y > 10 ? mousePosition.y : 10);
                 let targetAngle = currentImage ? currentImage.angle : null;
-                let targetScale = currentImage ? currentImage.scaleX : null;
+                let targetScaleX = currentImage ? currentImage.scaleX / currentImage.originalScaleX : null;
+                let targetScaleY = currentImage ? currentImage.scaleY / currentImage.originalScaleY : null;
 
                 if (currentImage) {
                     canvas.remove(currentImage);
+                    currentImage = null;
                 }
 
                 formula = formula.trim();
@@ -650,16 +660,22 @@ let RevealInking = window.RevealInking || (function (){
 
                         let img = fabric.util.groupSVGElements(objects, options).setCoords();
 
-                        if(targetScale) {
+                        img.scaleToHeight(
+                            svg.height.baseVal.value
+                        );
+
+                        img.set({
+                            'mathFormula': formula,
+                            'mathColor': mathColor,
+                            'originalScaleX': img.scaleX,
+                            'originalScaleY': img.scaleY
+                        });
+
+                        if(targetScaleX) {
                             img.set({
-                                scaleX: targetScale,
-                                scaleY: targetScale,
+                                scaleX: img.scaleX * targetScaleX,
+                                scaleY: img.scaleY * targetScaleY,
                             });
-                        }
-                        else {
-                            img.scaleToHeight(
-                                svg.height.baseVal.value
-                            );
                         }
 
                         if(targetAngle) {
@@ -674,8 +690,7 @@ let RevealInking = window.RevealInking || (function (){
                             lockScalingFlip: true,
                             hasRotatingPoint: false,
                             hasBorders: true,
-                            centeredScaling: true,
-                            lockUniScaling: true
+                            centeredScaling: true
                         });
 
                         if (MATH_SHADOW) {
@@ -686,24 +701,21 @@ let RevealInking = window.RevealInking || (function (){
                                 color: MATH_SHADOW === true ? 'rgba(0,0,0,1)' : MATH_SHADOW
                             }));
                         }
-                        function () {
-                            img.on('selected', function () {
-                                currentMathColor = mathColor;
-                                currentFormula = formula;
+
+                        img.on('selected', function () {
+                            if(canvas.getActiveObject() == img) {
                                 currentImage = img;
                                 document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + mathColor;
-                            })
-                        }
+                            }
+                        });
 
                         img.on('mousedblclick', function () {
-                            currentMathColor = mathColor;
-                            currentFormula = formula;
                             currentImage = img;
                             createNewFormulaWithQuery();
                         });
 
                         canvas.add(img);
-                        //canvas.setActiveObject(img);
+                        canvas.setActiveObject(img);
                     }
                 );
             }
