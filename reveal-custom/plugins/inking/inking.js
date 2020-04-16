@@ -168,33 +168,6 @@ let RevealInking = window.RevealInking || (function (){
             }
         });
 
-        Reveal.addEventListener('slidechanged',function(event){
-            destroySpotlight();
-            let objects = canvas.getObjects();
-            if(objects.length > 0) {
-                event.previousSlide.dataset.inkingCanvasContent = JSON.stringify(canvas);
-            }
-
-            let slide = event.currentSlide;
-            canvas.clear();
-            if(slide.dataset.inkingCanvasContent){
-                setTimeout(function(){
-                    canvas.loadFromJSON(slide.dataset.inkingCanvasContent);
-                    for(let obj of canvas.getObjects()){
-                        obj.set({
-                            hasControls: true,
-                            hasBorders: true,
-                            lockScalingFlip: true,
-                            centeredScaling: true,
-                            lockUniScaling: true,
-                            hasRotatingPoint: false
-                        });
-                    }
-                }, parseInt(window.getComputedStyle(slide).transitionDuration) || 800);
-            }
-            leaveDeletionMode();
-        });
-
         canvas.on('mouse:move', function(options) {
             mousePosition.x = options.e.layerX;
             mousePosition.y = options.e.layerY;
@@ -255,6 +228,58 @@ let RevealInking = window.RevealInking || (function (){
 
         canvas.targetFindTolerance = 3;
 
+        function getMathEnrichedCanvasJSON(){
+            let canvasSerialized = JSON.parse(JSON.stringify(canvas));
+            let objects = canvas.getObjects();
+            if(objects.length > 0) {
+                let i = 0;
+                for(let obj of objects) {
+                    if(obj.mathMetadata){
+                        canvasSerialized.objects[i].mathMetadata = obj.mathMetadata;
+                    }
+                    i++;
+                }
+            }
+            return JSON.stringify(canvasSerialized);
+        }
+
+        function loadCanvasFromMathEnrichedJSON(s){
+            let serializedCanvas = JSON.parse(s);
+            canvas.loadFromJSON(s);
+            let i = 0;
+            for(let obj of canvas.getObjects()){
+                let metadata = serializedCanvas.objects[i].mathMetadata;
+                if(metadata) {
+                    obj.set({
+                        mathMetadata: metadata
+                    });
+
+                    obj.on('selected', function () {
+                        if(canvas.getActiveObject() == obj) {
+                            currentImage = obj;
+                            document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + metadata.color;
+                        }
+                    });
+
+                    obj.on('mousedblclick', function () {
+                        currentImage = obj;
+                        createNewFormulaWithQuery();
+                    });
+                }
+
+                obj.set({
+                    hasControls: true,
+                    hasBorders: true,
+                    lockScalingFlip: true,
+                    centeredScaling: true,
+                    lockUniScaling: true,
+                    hasRotatingPoint: false
+                });
+
+                i++;
+            }
+        }
+
         function serializeCanvas(){
             function download(filename, text) {
                 let element = document.createElement('a');
@@ -279,7 +304,7 @@ let RevealInking = window.RevealInking || (function (){
                 if(confirm("Save all slides content? (Press Cancel to save only the current slide.)")){
                     filename = 'all_slides.json';
                     if(canvas.getObjects().length > 0) {
-                        Reveal.getCurrentSlide().dataset.inkingCanvasContent = JSON.stringify(canvas);
+                        Reveal.getCurrentSlide().dataset.inkingCanvasContent = getMathEnrichedCanvasJSON();
                     }
                     text = '[';
                     let slides = document.querySelectorAll('.reveal .slides section');
@@ -300,11 +325,29 @@ let RevealInking = window.RevealInking || (function (){
                 }
                 else{
                     filename = 'canvas.json';
-                    text = JSON.stringify(canvas);
+                    text = getMathEnrichedCanvasJSON();
                 }
             }
             download(filename, text);
         }
+
+        Reveal.addEventListener('slidechanged', function(event){
+            destroySpotlight();
+            let objects = canvas.getObjects();
+
+            if(objects.length > 0) {
+                event.previousSlide.dataset.inkingCanvasContent = getMathEnrichedCanvasJSON();
+            }
+
+            let slide = event.currentSlide;
+            canvas.clear();
+            if(slide.dataset.inkingCanvasContent){
+                setTimeout(function(){
+                    loadCanvasFromMathEnrichedJSON(slide.dataset.inkingCanvasContent);
+                }, parseInt(window.getComputedStyle(slide).transitionDuration) || 800);
+            }
+            leaveDeletionMode();
+        });
 
         document.addEventListener( 'keydown', function(event){
             if(SPOTLIGHT_ENABLED && event.key === HOTKEYS.SPOTLIGHT){
@@ -405,7 +448,7 @@ let RevealInking = window.RevealInking || (function (){
                 createSpotlight();
             }
             else {
-                if(options.target && options.target.mathFormula) {
+                if(options.target && options.target.mathMetadata) {
                     currentImage = options.target;
                 }
             }
@@ -420,7 +463,6 @@ let RevealInking = window.RevealInking || (function (){
         canvas.on('selection:cleared', function() {
             if(currentImage){
                 currentImage = null;
-                currentFormula = '';
                 document.querySelector('.ink-formula').style.textShadow = '';
             }
         });
@@ -591,10 +633,20 @@ let RevealInking = window.RevealInking || (function (){
         function createNewFormulaWithQuery(){
             let currentFormula = null;
             let currentMathColor = null;
+            let targetLeft = (mousePosition.x > 10 ? mousePosition.x : 10);
+            let targetTop = (mousePosition.y > 10 ? mousePosition.y : 10);
+            let targetAngle = null;
+            let targetScaleX = null;
+            let targetScaleY = null;
 
             if(currentImage && canvas.getActiveObject() == currentImage){
-                currentMathColor = currentImage.mathColor;
-                currentFormula = currentImage.mathFormula;
+                targetLeft = currentImage.left;
+                targetTop = currentImage.top;
+                targetAngle = currentImage.angle;
+                targetScaleX = currentImage.scaleX / currentImage.mathMetadata.originalScaleX;
+                targetScaleY = currentImage.scaleY / currentImage.mathMetadata.originalScaleY;
+                currentMathColor = currentImage.mathMetadata.color;
+                currentFormula = currentImage.mathMetadata.latex;
             }
 
             let mathColor = (currentFormula && currentMathColor) || (MATH_COLOR === 'ink' ? CURRENT_INK_COLOR : MATH_COLOR);
@@ -621,18 +673,6 @@ let RevealInking = window.RevealInking || (function (){
                     let rTo = mmacro[1];
                     formula = formula.replace( new RegExp( rFrom, 'g'), rTo );
                 }
-
-                let targetLeft =
-                    currentImage
-                        ? currentImage.left
-                        : (mousePosition.x > 10 ? mousePosition.x : 10);
-                let targetTop =
-                    currentImage
-                        ? currentImage.top
-                        : (mousePosition.y > 10 ? mousePosition.y : 10);
-                let targetAngle = currentImage ? currentImage.angle : null;
-                let targetScaleX = currentImage ? currentImage.scaleX / currentImage.originalScaleX : null;
-                let targetScaleY = currentImage ? currentImage.scaleY / currentImage.originalScaleY : null;
 
                 if (currentImage) {
                     canvas.remove(currentImage);
@@ -665,10 +705,12 @@ let RevealInking = window.RevealInking || (function (){
                         );
 
                         img.set({
-                            'mathFormula': formula,
-                            'mathColor': mathColor,
-                            'originalScaleX': img.scaleX,
-                            'originalScaleY': img.scaleY
+                            mathMetadata: {
+                                'latex': formula,
+                                'color': mathColor,
+                                'originalScaleX': img.scaleX,
+                                'originalScaleY': img.scaleY
+                            }
                         });
 
                         if(targetScaleX) {
