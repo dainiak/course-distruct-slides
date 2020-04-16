@@ -33,7 +33,7 @@
             Тогда \(K\subseteq \{a^0,\,\dots,\,a^{k-1}\}\).
         </p>
         <p class="fragment">
-            Если \(m\le n\) и \(\GCD(m,\,k) = 1\), то
+            Если \(m\le k\) и \(\GCD(m,\,k) = 1\), то
                 \[\forall\ell\; (\ell \lt k \implies (a^m)^\ell \neq 1),\]
             иначе было бы \(a^{\ell m} = 1\) при том, что \(\ord a \notdivides \ell m\).
         </p>
@@ -58,7 +58,8 @@
     <hr>
     <div class="proof fragment">
         <div class="title">Доказательство: сокращаем дроби!</div>
-        \[n=\{\tfrac{1}{n},\,\tfrac{2}{n},\,\dots,\,\tfrac{n}{n}\}=\calN\]
+        <p>Имеем \(n=\card\calN\), где
+        \[\{\tfrac{1}{n},\,\tfrac{2}{n},\,\dots,\,\tfrac{n}{n}\}=\calN\]</p>
         <p class="fragment">
             Видим, что ровно \(\euler(k)\) элементов множества \(\calN\)
             представимы несократимыми дробями со знаменателем \(k\) (и, конечно, \(k\divides n\)).
@@ -71,7 +72,7 @@
         <p>
             Очевидно, \(\calO\subseteq D_n = \{ d:\: d\divides n \}\).
             \[
-                |\Fstar| = \sum_{k\in \calO} \euler(k) \pstep{\green{\le} \sum_{k\in D_n} \euler(k)=\card\Fstar,}
+                |\Fstar| = \sum_{k\in \calO} \euler(k) \next{\green{\le} \sum_{k\in D_n} \euler(k)=\card\Fstar,}
             \]
             <span class="fragment">а стало быть, \(\calO=D_n\).</span>
         </p>
