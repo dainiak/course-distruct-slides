@@ -3084,7 +3084,6 @@
 
 		updateBackground();
 		updateNotes();
-
 	}
 
 	/**
@@ -4751,7 +4750,6 @@
 		} );
 
 		return grouped === true ? ordered : sorted;
-
 	}
 
 	/**

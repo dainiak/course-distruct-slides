@@ -10,12 +10,12 @@ let RevealMath = window.RevealMath || (function() {
 	options.mathjaxUrl = options.mathjaxUrl || 'https://cdn.jsdelivr.net/npm/mathjax@3.0.5/es5/tex-svg-full.js';
 
 	options.resetFragmentIndicesAfterTypeset = (options.resetFragmentIndicesAfterTypeset !== false);
-    options.macros = options.macros || [];
+    options.macros = options.macros || {};
 
     window.MathJax = {
         options: {
             renderActions: {
-                addMenu: [0]
+                addMenu: [0, '', '']
             },
             skipHtmlTags: [
                 "svg",
@@ -30,6 +30,16 @@ let RevealMath = window.RevealMath || (function() {
         startup: {
             typeset: false,
             ready: () => {
+                if (MathJax.version === '3.0.5') {
+                    const SVGWrapper = MathJax._.output.svg.Wrapper.SVGWrapper;
+                    const CommonWrapper = SVGWrapper.prototype.__proto__;
+                    SVGWrapper.prototype.unicodeChars = function (text, variant) {
+                        if (!variant){
+                            variant = this.variant || 'normal';
+                        }
+                        return CommonWrapper.unicodeChars.call(this, text, variant);
+                    }
+                }
                 MathJax.startup.defaultReady();
                 window.Reveal.typesetMath();
             }
@@ -78,6 +88,10 @@ let RevealMath = window.RevealMath || (function() {
                 hat: "\\widehat",
                 emptyset: "\\varnothing",
                 epsilon: "\\varepsilon",
+                fragidx: ["\\class{fragment fragidx-#1}{#2}", 2],
+                sfragidx: ["\\class{fragment step fragidx-#1}{#2}", 2],
+                vfragidx: ["\\rlap{\\class{fragment inactive-invisible fragidx-#1}{#2}}", 2],
+                underbracket: ["\\mathop{\\underset{\\mmlToken{mo}{⎵}}{#2}}\\limits_{#1}", 2],
                 next: ["\\class{fragment}{#1}", 1],
                 step: ["\\class{fragment step}{#1}", 1],
                 vstep: ["\\rlap{\\class{fragment inactive-invisible}{#1}}", 1],
@@ -196,13 +210,23 @@ let RevealMath = window.RevealMath || (function() {
             typesetMathInSVG();
         }
         MathJax.typeset();
-        Array.prototype.slice.call( document.querySelectorAll( 'mjx-assistive-mml .fragment' )).forEach(function( fragment, i ) {
+        for(let fragment of document.querySelectorAll( 'mjx-assistive-mml .fragment' ))
             fragment.classList.remove('fragment')
-        });
-        if(options.resetFragmentIndicesAfterTypeset) {
-            Array.prototype.slice.call(document.querySelectorAll('.fragment')).forEach(function (fragment, i) {
-                fragment.removeAttribute('data-fragment-index');
-            });
+
+        if(options.resetFragmentIndicesAfterTypeset || options.fragmentIndexCSS) {
+            for(let slide of Reveal.getSlides()){
+                for(let fragment of slide.querySelectorAll('.fragment'))
+                    if (fragment.hasAttribute('data-fragment-index'))
+                        fragment.removeAttribute('data-fragment-index');
+
+                for(let i = 0; i < 15; ++i) {
+                    let fragments = slide.querySelectorAll('.fragment.fragidx-' + i.toString());
+                    if(fragments.length == 0 && i >= 1)
+                        break;
+                    for(let fragment of fragments)
+                        fragment.setAttribute('data-fragment-index', i);
+                }
+            }
         }
         Reveal.layout();
     }

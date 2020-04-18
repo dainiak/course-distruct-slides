@@ -67,10 +67,11 @@
             math: {
                 shadow: true,
                 color: 'ink',
-                displayStyle: true
+                displayStyle: true,
+                preamble: ''
             },
             ink: {
-                color: ['green', 'red', 'teal']
+                color: ['green', 'red', 'blue', 'lightgrey']
             }
             //inkingCanvasContent: predefinedSlideContent,
         },
@@ -95,7 +96,8 @@
                 async: false
             },
             {
-                src: '../reveal-custom/plugins/inking/inking.js'
+                src: '../reveal-custom/plugins/inking/inking.js',
+                async: false
             },
             // {
             //     src: '../reveal-custom/plugins/webcam/webcam.js'

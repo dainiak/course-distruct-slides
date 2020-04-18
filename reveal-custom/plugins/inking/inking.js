@@ -42,7 +42,7 @@ let RevealInking = window.RevealInking || (function (){
     let MATH_SHADOW = options.math.shadow || false;
     let DISPLAY_STYLE_MATH = options.math.displayStyle !== false;
     let MATH_USER_SCALING = options.math.scaling || 1;
-    let MATH_MACROS = options.math.macros || [];
+    let MATH_PREAMBLE = (options.math && options.math.preamble) ? ('{' + options.math.preamble + '}') : '';
 
     let SPOTLIGHT_ENABLED = options.spotlight !== false;
     options.spotlight = options.spotlight || {};
@@ -98,9 +98,80 @@ let RevealInking = window.RevealInking || (function (){
         },
         {
             url: 'https://cdn.jsdelivr.net/npm/mathjax@3.0.5/es5/tex-svg-full.js',
-            condition: MATH_ENABLED && !window.MathJax
+            condition: MATH_ENABLED && !Reveal.getConfig().math && !window.RevealMath && (!window.MathJax || !window.MathJax.version)
         }
     ];
+
+    if(MATH_ENABLED && !Reveal.getConfig().math && !window.RevealMath && (!window.MathJax || !window.MathJax.version)) {
+        window.MathJax = {
+            options: {
+                renderActions: {
+                    addMenu: [0]
+                },
+                skipHtmlTags: [
+                    "svg",
+                    "script",
+                    "noscript",
+                    "style",
+                    "textarea",
+                    "pre",
+                    "code"
+                ]
+            },
+            startup: {
+                typeset: false,
+                ready: () => {
+                    MathJax.startup.defaultReady();
+                }
+            },
+            svg: {
+                fontCache: "none"
+            },
+            tex: {
+                inlineMath: [["\\(", "\\)"]],
+                displayMath: [["\\[", "\\]"]],
+                macros: {
+                    bbA: "{\\mathbb{A}}",
+                    bbB: "{\\mathbb{B}}",
+                    bbF: "{\\mathbb{F}}",
+                    bbN: "{\\mathbb{N}}",
+                    bbP: "{\\mathbb{P}}",
+                    bbQ: "{\\mathbb{Q}}",
+                    bbR: "{\\mathbb{R}}",
+                    bbZ: "{\\mathbb{Z}}",
+                    calA: "{\\mathcal{A}}",
+                    calB: "{\\mathcal{B}}",
+                    calC: "{\\mathcal{C}}",
+                    calD: "{\\mathcal{D}}",
+                    calF: "{\\mathcal{F}}",
+                    calG: "{\\mathcal{G}}",
+                    calI: "{\\mathcal{I}}",
+                    calM: "{\\mathcal{M}}",
+                    calN: "{\\mathcal{N}}",
+                    calO: "{\\mathcal{O}}",
+                    calR: "{\\mathcal{R}}",
+                    calS: "{\\mathcal{S}}",
+                    bfA: "{\\mathbf{A}}",
+                    bfa: "{\\mathbf{a}}",
+                    bfb: "{\\mathbf{b}}",
+                    bfc: "{\\mathbf{c}}",
+                    bfe: "{\\mathbf{e}}",
+                    bfw: "{\\mathbf{w}}",
+                    bfx: "{\\mathbf{x}}",
+                    bfy: "{\\mathbf{y}}",
+                    bfz: "{\\mathbf{z}}",
+                    floor: ["{\\left\\lfloor #1 \\right\\rfloor}", 1],
+                    ceil: ["{\\left\\lceil #1 \\right\\rceil}", 1],
+                    le: "\\leqslant",
+                    ge: "\\geqslant",
+                    hat: "\\widehat",
+                    emptyset: "\\varnothing",
+                    epsilon: "\\varepsilon"
+                }
+            }
+        };
+    }
+
 
     loadScripts(scriptsToLoad, function () {
         // This is important for MathJax equations to serialize well into fabric.js
@@ -474,25 +545,19 @@ let RevealInking = window.RevealInking || (function (){
             let currentFontSize = window.getComputedStyle(Reveal.getCurrentSlide()).fontSize.toString();
             mathRenderingDiv.style.fontSize = currentFontSize.replace(/^\d+/, (RENDERING_RESOLUTION * parseInt(currentFontSize)).toString());
 
-            let formula = prompt('Enter a formula', currentFormula || '');
-            if(formula && formula.trim()) {
-                formula = formula.trim();
-                for(let mmacro of MATH_MACROS){
-                    let rFrom = mmacro[0].replace(/[\\$^[{}()?.*|]/g, function($0){return '\\'+$0});
-                    let rTo = mmacro[1];
-                    formula = formula.replace( new RegExp(rFrom, 'g'), rTo );
-                }
+            let formula = (prompt('Enter a formula', currentFormula || '') || '').trim();
 
+            if(formula) {
                 if (currentMathImage) {
                     canvas.remove(currentMathImage);
                     currentMathImage = null;
                 }
 
-                formula = formula.trim();
                 mathRenderingDiv.innerHTML = '';
                 let mjMetrics = MathJax.getMetricsFor(mathRenderingDiv, DISPLAY_STYLE_MATH);
+
                 mathRenderingDiv.appendChild(MathJax.tex2svg(
-                    formula,
+                    MATH_PREAMBLE + formula,
                     mjMetrics
                 ));
                 let svg = mathRenderingDiv.querySelector('mjx-container > svg');
