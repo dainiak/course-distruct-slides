@@ -10,47 +10,13 @@
     }
   }
 
-  .fragment.vanishing {
-    display: none;
-    &.visible {
-      display: none;
-    }
-    &.visible.current-fragment {
-      display: inherit;
-    }
-  }
-
-  .fragment.vstep {
+  .fragment.display-then-remove {
     display: none;
     &.visible {
       display: none;
     }
     &.visible.current-fragment {
       display: inline;
-    }
-  }
-
-  .fragment.inactive-invisible {
-    transition-duration: 0s;
-    opacity: 0;
-    &.visible {
-      transition-duration: 0s;
-      opacity: 0;
-    }
-    &.visible.current-fragment {
-      transition-duration: 0.5s;
-      opacity: 1;
-    }
-  }
-
-  .reveal .slides section .fragment.void {
-    display: inherit;
-    visibility: inherit;
-    &.visible {
-      display: none;
-      &.current-fragment {
-        display: inherit;
-      }
     }
   }
 

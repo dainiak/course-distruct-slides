@@ -144,45 +144,14 @@
 .reveal .slides section .fragment.step.current-fragment, .reveal .slides section ul.steps li.fragment.current-fragment {
   opacity: 1;
 }
-.reveal .slides section .fragment.vanishing {
+.reveal .slides section .fragment.display-then-remove {
   display: none;
 }
-.reveal .slides section .fragment.vanishing.visible {
+.reveal .slides section .fragment.display-then-remove.visible {
   display: none;
 }
-.reveal .slides section .fragment.vanishing.visible.current-fragment {
-  display: inherit;
-}
-.reveal .slides section .fragment.vstep {
-  display: none;
-}
-.reveal .slides section .fragment.vstep.visible {
-  display: none;
-}
-.reveal .slides section .fragment.vstep.visible.current-fragment {
+.reveal .slides section .fragment.display-then-remove.visible.current-fragment {
   display: inline;
-}
-.reveal .slides section .fragment.inactive-invisible {
-  transition-duration: 0s;
-  opacity: 0;
-}
-.reveal .slides section .fragment.inactive-invisible.visible {
-  transition-duration: 0s;
-  opacity: 0;
-}
-.reveal .slides section .fragment.inactive-invisible.visible.current-fragment {
-  transition-duration: 0.5s;
-  opacity: 1;
-}
-.reveal .slides section .reveal .slides section .fragment.void {
-  display: inherit;
-  visibility: inherit;
-}
-.reveal .slides section .reveal .slides section .fragment.void.visible {
-  display: none;
-}
-.reveal .slides section .reveal .slides section .fragment.void.visible.current-fragment {
-  display: inherit;
 }
 .reveal .slides section .fragment.sliding-underline {
   display: inline-block;

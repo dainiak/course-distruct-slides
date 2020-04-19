@@ -4,7 +4,7 @@ let RevealMath = window.RevealMath || (function() {
     // options.mathjaxConfig — custom configuration for MathJax
     // options.svgMathEnabled — use MathJax to render latex notation within SVG images
     // options.svgMathFixedScale — fixed scaling factor for math within SVG images
-    // optinos.svgMathEscapeClipping — don’t clip contents of the formula
+    // options.svgMathEscapeClipping — don’t clip contents of the formula
     options.svgMathScale = options.svgMathScale || 0.0015;
 
 	options.mathjaxUrl = options.mathjaxUrl || 'https://cdn.jsdelivr.net/npm/mathjax@3.0.5/es5/tex-svg-full.js';
@@ -89,12 +89,12 @@ let RevealMath = window.RevealMath || (function() {
                 emptyset: "\\varnothing",
                 epsilon: "\\varepsilon",
                 fragidx: ["\\class{fragment fragidx-#1}{#2}", 2],
-                sfragidx: ["\\class{fragment step fragidx-#1}{#2}", 2],
-                vfragidx: ["\\rlap{\\class{fragment inactive-invisible fragidx-#1}{#2}}", 2],
+                sfragidx: ["\\class{fragment fade-in-then-semi-out fragidx-#1}{#2}", 2],
+                vfragidx: ["\\rlap{\\class{fragment fade-in-then-out fragidx-#1}{#2}}", 2],
                 underbracket: ["\\mathop{\\underset{\\mmlToken{mo}{⎵}}{#2}}\\limits_{#1}", 2],
                 next: ["\\class{fragment}{#1}", 1],
-                step: ["\\class{fragment step}{#1}", 1],
-                vstep: ["\\rlap{\\class{fragment inactive-invisible}{#1}}", 1],
+                step: ["\\class{fragment fade-in-then-semi-out}{#1}", 1],
+                vstep: ["\\rlap{\\class{fragment fade-in-then-out}{#1}}", 1],
                 zoomable: ["\\class{zoomable}{#1}", 1],
                 green: ["\\class{green}{#1}", 1],
                 red: ["\\class{red}{#1}", 1]

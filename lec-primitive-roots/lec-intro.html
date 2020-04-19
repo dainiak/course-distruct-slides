@@ -16,7 +16,7 @@
 <body>
 <div class="reveal"><div class="slides">
     <section title="Титульный слайд" data-external="sect-title.html"></section>
-    <section title="Конечные поля" data-external="sect-fields-defs.html"></section>
+    <section title="Конечные поля" data-external="./sect1/sect-fields-defs.html"></section>
     <section title="Теорема Лагранжа о корнях многочленов" data-external="sect-lagrange-theorem.html"></section>
     <section title="Кол-во элементов заданного порядка" data-external="sect-primitive-in-field.html"></section>
     <section title="Квадратичные вычеты" data-external="sect-quadratic-residues.html"></section>
@@ -36,6 +36,9 @@
         history: true,
         transition: 'slide',
         controls: false,
+        external: {
+            mapAttributes: ['data-inking-canvas-src', 'src']
+        },
         menu: {
             openSlideNumber: true,
             openButton: false,
@@ -65,15 +68,15 @@
                 opacity: 0.8
             },
             math: {
-                shadow: true,
+                // shadow: true,
                 color: 'ink',
                 displayStyle: true,
                 preamble: ''
             },
             ink: {
                 color: ['green', 'red', 'blue', 'lightgrey']
-            }
-            //inkingCanvasContent: predefinedSlideContent,
+            },
+            // inkingCanvasContent:
         },
         highlighting: {
             editorInPlace: true
@@ -83,14 +86,15 @@
         },
         dependencies: [
             {
-                src: '../reveal-custom/plugins/menu/menu.js'
-            },
-            {
                 src: '../reveal-custom/plugins/external/external.js',
+                async: false,
                 condition: function () {
                     return !!document.querySelector('[data-external],[data-external-replace]');
                 }
             },
+            // {
+            //     src: '../reveal-custom/plugins/menu/menu.js'
+            // },
             {
                 src: '../reveal-custom/plugins/math-mod/math.js',
                 async: false

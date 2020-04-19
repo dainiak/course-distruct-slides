@@ -69,7 +69,12 @@
     };
 
     let convertAttributes = function( attributeName, container, path ) {
-        let nodes = container.querySelectorAll( '[' + attributeName + ']' );
+        if(!(container instanceof Element)){
+            return;
+        }
+        let nodes = container.querySelectorAll('[' + attributeName + ']');
+
+
     	if ( container.getAttribute( attributeName ) ) {
             container.setAttribute(
                 attributeName,
@@ -85,8 +90,8 @@
     };
 
     let convertUrls = function( container, path ) {
-        for (let i = 0, c = options.mapAttributes.length; i < c; i++ ) {
-            convertAttributes( options.mapAttributes[i], container, path );
+        for(let attributeName of options.mapAttributes) {
+            convertAttributes( attributeName, container, path );
         }
     };
 
@@ -135,9 +140,12 @@
                     }
 
 					node = document.importNode( node, true );
-					replace
-						? target.parentNode.insertBefore( node, target )
-						: target.appendChild( node );
+					if(replace) {
+                        target.parentNode.insertBefore(node, target)
+                    }
+                    else {
+                        target.appendChild(node);
+                    }
 
 					if ( options.async ) {
 						Reveal.sync();

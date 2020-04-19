@@ -49,7 +49,8 @@ let RevealInking = window.RevealInking || (function (){
     let SPOTLIGHT_BACKGROUND_OPACITY = options.spotlight.backgroundOpacity || 0.5;
     let SPOTLIGHT_RADIUS = options.spotlight.radius || 100;
 
-    let PREDEFINED_CANVAS_CONTENT = options.inkingCanvasContent;
+    let PREDEFINED_CANVAS_CONTENT = options.inkingCanvasContent || null;
+
     let mousePosition = {};
 
     let canvasElement = null;
@@ -172,183 +173,493 @@ let RevealInking = window.RevealInking || (function (){
         };
     }
 
+    function toArray( o ) {
+        return Array.prototype.slice.call( o );
+    }
 
-    loadScripts(scriptsToLoad, function () {
-        // This is important for MathJax equations to serialize well into fabric.js
-        fabric.Object.NUM_FRACTION_DIGITS = 5;
+    function addInkingControls(){
+        let controls = document.createElement( 'aside' );
+        controls.classList.add( 'ink-controls' );
 
-        function resetMainCanvasDomNode() {
-            let viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-            let viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-            let bottomPadding = 0;
-            if (CANVAS_ABOVE_CONTROLS){
-                bottomPadding = parseInt(window.getComputedStyle(document.querySelector('.controls')).height) + parseInt(window.getComputedStyle(document.querySelector('.controls')).bottom);
+        let colorControls = '';
+
+        if(Array.isArray(INK_COLORS)) {
+            for(let color of INK_COLORS){
+                color = color.trim();
+                if(color) {
+                    colorControls += '<div class="ink-color ink-control-button" style="color: ' + color + '"></div>';
+                }
             }
+        }
 
-            if(canvas) {
-                canvas.dispose();
-            }
+        controls.innerHTML =
+            colorControls
+            + '<div class="ink-pencil ink-control-button"></div>'
+            + '<div class="ink-erase ink-control-button"></div>'
+            + (MATH_ENABLED ? '<div class="ink-formula ink-control-button"></div>' : '')
+            + '<div class="ink-clear ink-control-button"></div>'
+            + '<div class="ink-hidecanvas ink-control-button"></div>'
+            + '<div class="ink-serializecanvas ink-control-button"></div>';
+        document.body.appendChild( controls );
+    }
 
-            canvasElement = document.querySelector('#revealjs_inking_canvas');
-            if (!canvasElement) {
-                canvasElement = document.createElement('canvas');
-                document.body.appendChild(canvasElement);
-            }
-            canvasElement.id = 'revealjs_inking_canvas';
-            canvasElement.style.position = 'fixed';
-            canvasElement.style.left = '0px';
-            canvasElement.style.top = '0px';
-            canvasElement.style.bottom = bottomPadding.toString() + 'px';
-            canvasElement.style.width = '100%';
-            canvasElement.style.zIndex = window.getComputedStyle(document.querySelector('.controls')).zIndex;
-            canvasElement.width = viewportWidth;
-            canvasElement.height = viewportHeight - bottomPadding;
+    function toggleColorChoosers(b) {
+        for(let element of document.querySelectorAll('.ink-color')) {
+            element.style.visibility = b ? 'visible' : 'hidden';
+        }
+    }
 
-            canvas = new fabric.Canvas(canvasElement, {
-                perPixelTargetFind: true,
-                renderOnAddRemove: true
+    function setCanvasObjectDefaults(obj){
+        obj.set({
+            hasControls: true,
+            hasBorders: true,
+            lockScalingFlip: true,
+            centeredScaling: true,
+            hasRotatingPoint: false
+        });
+    }
+
+    function resetMainCanvasDomNode() {
+        let viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+        let viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+        let bottomPadding = 0;
+        if (CANVAS_ABOVE_CONTROLS){
+            bottomPadding = parseInt(window.getComputedStyle(document.querySelector('.controls')).height) + parseInt(window.getComputedStyle(document.querySelector('.controls')).bottom);
+        }
+
+        if(canvas) {
+            canvas.dispose();
+        }
+
+        canvasElement = document.querySelector('#revealjs_inking_canvas');
+        if (!canvasElement) {
+            canvasElement = document.createElement('canvas');
+            document.body.appendChild(canvasElement);
+        }
+        canvasElement.id = 'revealjs_inking_canvas';
+        canvasElement.style.position = 'fixed';
+        canvasElement.style.left = '0px';
+        canvasElement.style.top = '0px';
+        canvasElement.style.bottom = bottomPadding.toString() + 'px';
+        canvasElement.style.width = '100%';
+        canvasElement.style.zIndex = window.getComputedStyle(document.querySelector('.controls')).zIndex;
+        canvasElement.width = viewportWidth;
+        canvasElement.height = viewportHeight - bottomPadding;
+
+        canvas = new window.fabric.Canvas(canvasElement, {
+            perPixelTargetFind: true,
+            renderOnAddRemove: true
+        });
+
+        canvas.upperCanvasEl.style.position = 'fixed';
+        canvas.lowerCanvasEl.style.position = 'fixed';
+        canvas.freeDrawingBrush.width = 2;
+
+        if(INK_SHADOW) {
+            canvas.freeDrawingBrush.shadow = new window.fabric.Shadow({
+                blur: 10,
+                offsetX: 1,
+                offsetY: 1,
+                color: INK_SHADOW
             });
-
-            canvas.upperCanvasEl.style.position = 'fixed';
-            canvas.lowerCanvasEl.style.position = 'fixed';
-            canvas.freeDrawingBrush.width = 2;
-
-            if(INK_SHADOW) {
-                canvas.freeDrawingBrush.shadow = new fabric.Shadow({
-                    blur: 10,
-                    offsetX: 1,
-                    offsetY: 1,
-                    color: INK_SHADOW
-                });
-            }
-            else{
-                canvas.freeDrawingBrush.shadow = null;
-            }
-
-            canvas.targetFindTolerance = 3;
+        }
+        else{
+            canvas.freeDrawingBrush.shadow = null;
         }
 
-        function enterDeletionMode(){
-            leaveDrawingMode();
+        canvas.targetFindTolerance = 3;
+    }
 
-            if(!isInEraseMode) {
-                canvas.isDrawingMode = false;
-                isInEraseMode = true;
-                canvas.selection = false;
-                document.querySelector('.ink-erase').style.textShadow = CONTROLS_SHADOW;
-            }
+    function createSpotlight(){
+        if(!SPOTLIGHT_ENABLED) {
+            return;
         }
-
-        function leaveDeletionMode(){
-            if (isInEraseMode) {
-                isInEraseMode = false;
-                canvas.selection = true;
-                document.querySelector('.ink-erase').style.textShadow = '';
-            }
-        }
-
-        function getMathEnrichedCanvasJSON(){
-            let canvasSerialized = JSON.parse(JSON.stringify(canvas));
-            let objects = canvas.getObjects();
-            if(objects.length && objects.length > 0) {
-                objects.forEach(function (obj, i) {
-                    if(obj.mathMetadata){
-                        canvasSerialized.objects[i].mathMetadata = obj.mathMetadata;
-                    }
-                });
-            }
-            return JSON.stringify(canvasSerialized);
-        }
-
-        function loadCanvasFromMathEnrichedJSON(s){
-            let serializedCanvas = JSON.parse(s);
-            canvas.loadFromJSON(s);
-
-            let objects = canvas.getObjects();
-            if(objects.length && objects.length > 0) {
-                objects.forEach(function (obj, i) {
-                    let metadata = serializedCanvas.objects[i].mathMetadata;
-                    if (metadata && MATH_ENABLED) {
-                        obj.set({
-                            mathMetadata: metadata
-                        });
-
-                        obj.on('selected', function () {
-                            if (canvas.getActiveObject() == obj) {
-                                currentMathImage = obj;
-                                document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + metadata.color;
-                            }
-                        });
-
-                        obj.on('mousedblclick', function () {
-                            currentMathImage = obj;
-                            createNewFormulaWithQuery();
-                        });
-                    }
-
-                    obj.set({
-                        hasControls: true,
-                        hasBorders: true,
-                        lockScalingFlip: true,
-                        centeredScaling: true,
-                        lockUniScaling: true,
-                        hasRotatingPoint: false
-                    });
-                });
-            }
-        }
-
-        function serializeCanvas(){
-            function download(filename, text) {
-                let element = document.createElement('a');
-                element.style.display = 'none';
-
-                element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-                element.setAttribute('download', filename);
-
-                document.body.appendChild(element);
-                element.click();
-                document.body.removeChild(element);
-            }
-
+        if(spotlight){
             destroySpotlight();
+        }
 
-            let text, filename;
-            if(confirm("Save current slide to SVG? (Press Cancel to save current or all slides to JSON.)")) {
-                text = canvas.toSVG();
-                filename = 'canvas.svg';
+        spotlight = new window.fabric.Circle({
+            radius: SPOTLIGHT_RADIUS,
+            left: mousePosition.x - SPOTLIGHT_RADIUS,
+            top: mousePosition.y - SPOTLIGHT_RADIUS,
+            hasControls: false,
+            hasBorders: false,
+            selectable: false,
+            evented: false,
+            fill: "white",
+            cursor: "none",
+            opacity: 1,
+            globalCompositeOperation: 'destination-out',
+        });
+        spotlightBackground = new window.fabric.Rect({
+            left: 0,
+            top: 0,
+            width: canvas.width,
+            height: canvas.height,
+            fill: "black",
+            hasControls: false,
+            hasBorders: false,
+            evented: false,
+            selectable: false,
+            opacity: SPOTLIGHT_BACKGROUND_OPACITY
+        });
+
+        canvas.selection = false;
+        canvas.defaultCursor = 'none';
+        canvas.add(spotlightBackground);
+        canvas.add(spotlight);
+    }
+
+    function destroySpotlight(){
+        if(SPOTLIGHT_ENABLED && spotlight) {
+            canvas.remove(spotlight);
+            canvas.remove(spotlightBackground);
+            spotlight = null;
+            spotlightBackground = null;
+            canvas.selection = true;
+            canvas.defaultCursor = null;
+        }
+    }
+
+    function isCanvasVisible(){
+        let cContainer = document.querySelector('.canvas-container');
+        return !(cContainer.style.display === 'none');
+    }
+
+    function toggleCanvas(on){
+        let cContainer = document.querySelector('.canvas-container');
+
+        if(on !== true && on !== false) {
+            on = !isCanvasVisible();
+        }
+
+        if (on){
+            document.querySelector('.ink-hidecanvas').style.textShadow = '';
+            cContainer.style.display = 'block';
+        }
+        else {
+            destroySpotlight();
+            cContainer.style.display = 'none';
+            document.querySelector('.ink-hidecanvas').style.textShadow = CONTROLS_SHADOW;
+        }
+    }
+
+    function toggleDrawingMode() {
+        if (canvas.isDrawingMode) {
+            leaveDrawingMode();
+        }
+        else {
+            enterDrawingMode();
+        }
+    }
+    function enterDrawingMode(){
+        canvas.freeDrawingBrush.color = CURRENT_INK_COLOR;
+        canvas.isDrawingMode = true;
+        document.querySelector('.ink-pencil').style.textShadow = '0 0 10px ' + CURRENT_INK_COLOR;
+        toggleColorChoosers(true);
+    }
+    function leaveDrawingMode() {
+        canvas.isDrawingMode = false;
+        document.querySelector('.ink-pencil').style.textShadow = '';
+        toggleColorChoosers(false);
+    }
+
+    function enterDeletionMode(){
+        leaveDrawingMode();
+
+        if(!isInEraseMode) {
+            canvas.isDrawingMode = false;
+            isInEraseMode = true;
+            canvas.selection = false;
+            document.querySelector('.ink-erase').style.textShadow = CONTROLS_SHADOW;
+        }
+    }
+
+    function leaveDeletionMode(){
+        if (isInEraseMode) {
+            isInEraseMode = false;
+            canvas.selection = true;
+            document.querySelector('.ink-erase').style.textShadow = '';
+        }
+    }
+
+    function setMathImageShadow(img){
+        if (MATH_SHADOW) {
+            img.set('shadow', new window.fabric.Shadow({
+                blur: 10,
+                offsetX: 1,
+                offsetY: 1,
+                color: MATH_SHADOW === true ? 'rgba(0,0,0,1)' : MATH_SHADOW
+            }));
+        }
+    }
+
+    function setMathImageScalingLocks(img) {
+        img.set({
+            lockScalingFlip: true,
+            hasRotatingPoint: false,
+            hasBorders: true,
+            centeredScaling: true
+        });
+    }
+
+    function addMathImageEventListeners(img, mathColor){
+        img.on('selected', function () {
+            if(canvas.getActiveObject() == img) {
+                currentMathImage = img;
+                if(mathColor) {
+                    document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + mathColor;
+                }
             }
-            else {
-                if(confirm("Save all slides content? (Press Cancel to save only the current slide.)")){
-                    filename = 'all_slides.json';
-                    if(canvas.getObjects().length > 0) {
-                        Reveal.getCurrentSlide().dataset.inkingCanvasContent = getMathEnrichedCanvasJSON();
+        });
+
+        img.on('mousedblclick', function () {
+            currentMathImage = img;
+            createNewFormulaWithQuery();
+        });
+    }
+
+    function createNewFormulaWithQuery(){
+        let currentFormula = null;
+        let currentMathColor = null;
+        let targetLeft = (mousePosition.x > 10 ? mousePosition.x : 10);
+        let targetTop = (mousePosition.y > 10 ? mousePosition.y : 10);
+        let targetAngle = null;
+        let targetScaleX = null;
+        let targetScaleY = null;
+
+        if(currentMathImage && canvas.getActiveObject() == currentMathImage){
+            targetLeft = currentMathImage.left;
+            targetTop = currentMathImage.top;
+            targetAngle = currentMathImage.angle;
+            targetScaleX = currentMathImage.scaleX / currentMathImage.mathMetadata.originalScaleX;
+            targetScaleY = currentMathImage.scaleY / currentMathImage.mathMetadata.originalScaleY;
+            currentMathColor = currentMathImage.mathMetadata.color;
+            currentFormula = currentMathImage.mathMetadata.latex;
+        }
+
+        let mathColor = (currentFormula && currentMathColor) || (MATH_COLOR === 'ink' ? CURRENT_INK_COLOR : MATH_COLOR);
+        document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + mathColor;
+
+        if(!mathRenderingDiv) {
+            mathRenderingDiv = document.createElement('div');
+            mathRenderingDiv.style.position = 'fixed';
+            mathRenderingDiv.style.top = '0px';
+            mathRenderingDiv.style.left = '0px';
+            mathRenderingDiv.style.opacity = 0;
+            mathRenderingDiv.style.color = mathColor;
+            document.body.appendChild(mathRenderingDiv);
+        }
+
+        let currentFontSize = window.getComputedStyle(Reveal.getCurrentSlide()).fontSize.toString();
+        mathRenderingDiv.style.fontSize = currentFontSize.replace(/^\d+/, (RENDERING_RESOLUTION * parseInt(currentFontSize)).toString());
+
+        let formula = (prompt('Enter a formula', currentFormula || '') || '').trim();
+
+        if(formula) {
+            if (currentMathImage) {
+                canvas.remove(currentMathImage);
+                currentMathImage = null;
+            }
+
+            mathRenderingDiv.innerHTML = '';
+            let mjMetrics = MathJax.getMetricsFor(mathRenderingDiv, DISPLAY_STYLE_MATH);
+
+            mathRenderingDiv.appendChild(MathJax.tex2svg(
+                MATH_PREAMBLE + formula,
+                mjMetrics
+            ));
+            let svg = mathRenderingDiv.querySelector('mjx-container > svg');
+            let svgString = mathRenderingDiv.querySelector('mjx-container').innerHTML;
+
+            window.fabric.loadSVGFromString(
+                svgString,
+                function(objects, options) {
+                    for(let obj of objects){
+                        obj.set({
+                            fill: mathColor
+                        });
                     }
-                    text = '[';
-                    let slides = document.querySelectorAll('.reveal .slides section');
-                    for(let slideNumber = 0; slideNumber < slides.length; ++slideNumber) {
-                        let slide = slides[slideNumber];
-                        let content = slide.dataset.inkingCanvasContent;
-                        if(content) {
-                            if(text.length > 2) {
-                                text += ', ';
-                            }
-                            text +=
-                                '{'
-                                + (slide.id ? '"slideId": ' + JSON.stringify(slide.id) : '"slideNumber": ' + JSON.stringify(slideNumber))
-                                + ', "inkingCanvasContent": ' + content +'}';
+
+                    let img = window.fabric.util.groupSVGElements(objects, options).setCoords();
+
+                    img.scaleToHeight(
+                        svg.height.baseVal.value * MATH_USER_SCALING
+                    );
+
+                    img.set({
+                        mathMetadata: {
+                            'latex': formula,
+                            'color': mathColor,
+                            'originalScaleX': img.scaleX,
+                            'originalScaleY': img.scaleY
                         }
+                    });
+
+                    if(targetScaleX) {
+                        img.set({
+                            scaleX: img.scaleX * targetScaleX,
+                            scaleY: img.scaleY * targetScaleY,
+                        });
                     }
-                    text += ']';
+
+                    if(targetAngle) {
+                        img.set({
+                            angle: targetAngle
+                        });
+                    }
+
+                    img.set({
+                        left: targetLeft,
+                        top: targetTop
+                    });
+
+                    setMathImageScalingLocks(img);
+                    setMathImageShadow(img);
+                    addMathImageEventListeners(img, mathColor);
+
+                    canvas.add(img);
+                    canvas.setActiveObject(img);
+                }
+            );
+        }
+        else {
+            document.querySelector('.ink-formula').style.textShadow = '';
+        }
+    }
+
+    function getMathEnrichedCanvasObject(){
+        return canvas.toObject(['mathMetadata']);
+    }
+    function getMathEnrichedCanvasJSON(){
+        return JSON.stringify(getMathEnrichedCanvasObject());
+    }
+
+    function loadCanvasFromMathEnrichedObject(serializedCanvas){
+        canvas.loadFromJSON(serializedCanvas);
+
+        let objects = canvas.getObjects();
+        if(objects.length) {
+            objects.forEach(function (obj) {
+                if (obj.mathMetadata && MATH_ENABLED) {
+                    addMathImageEventListeners(obj, obj.mathMetadata.color);
+                    setMathImageShadow(obj);
                 }
                 else{
-                    filename = 'canvas.json';
-                    text = getMathEnrichedCanvasJSON();
+                    setCanvasObjectDefaults(obj);
                 }
+            });
+        }
+    }
+    function loadCanvasFromMathEnrichedJSON(s){
+        loadCanvasFromMathEnrichedObject(JSON.parse(s));
+    }
+
+    function addInkingControlsEventListeners() {
+        document.querySelector('.ink-pencil').addEventListener('click',
+            toggleDrawingMode
+        );
+
+        document.querySelector('.ink-erase').addEventListener('click',function(){
+            if (isInEraseMode){
+                leaveDeletionMode();
             }
-            download(filename, text);
+            else{
+                enterDeletionMode();
+            }
+        });
+
+        document.querySelector('.ink-clear').addEventListener('mousedown', function (event) {
+            let btn = event.target;
+            btn.style.textShadow = CONTROLS_SHADOW;
+            setTimeout(function () {
+                btn.style.textShadow = '';
+            }, 200);
+            canvas.clear();
+        });
+
+        for(let element of document.querySelectorAll('.ink-color')){
+            element.addEventListener('mousedown', function(event){
+                let btn = event.target;
+                CURRENT_INK_COLOR = btn.style.color;
+                canvas.freeDrawingBrush.color = CURRENT_INK_COLOR;
+                if(canvas.isDrawingMode) {
+                    document.querySelector('.ink-pencil').style.textShadow = '0 0 10px ' + CURRENT_INK_COLOR;
+                }
+                btn.style.textShadow = '0 0 20px ' + btn.style.color;
+                setTimeout( function(){btn.style.textShadow = '';}, 200 );
+            });
         }
 
+        document.querySelector('.ink-hidecanvas').addEventListener('click',
+            toggleCanvas
+        );
+
+        document.querySelector('.ink-serializecanvas').addEventListener('click',
+            serializeCanvasToFile
+        );
+
+        if(MATH_ENABLED) {
+            document.querySelector('.ink-formula').addEventListener(
+                'click',
+                createNewFormulaWithQuery
+            );
+        }
+    }
+
+    function addCanvasEventListeners() {
+        canvas.on('mouse:down', function (options) {
+            isMouseLeftButtonDown = true;
+            mousePosition.x = options.e.layerX;
+            mousePosition.y = options.e.layerY;
+            if (SPOTLIGHT_ENABLED && options.e.altKey) {
+                createSpotlight();
+            } else {
+                if (options.target && options.target.mathMetadata) {
+                    currentMathImage = options.target;
+                }
+            }
+        });
+        canvas.on('mouse:up', function (options) {
+            isMouseLeftButtonDown = false;
+            if (SPOTLIGHT_ENABLED && options.e.altKey) {
+                destroySpotlight();
+            }
+        });
+
+        canvas.on('mouse:move', function (options) {
+            mousePosition.x = options.e.layerX;
+            mousePosition.y = options.e.layerY;
+            if (spotlight) {
+                spotlight.set({
+                    left: mousePosition.x - spotlight.radius,
+                    top: mousePosition.y - spotlight.radius
+                });
+                canvas.renderAll();
+            }
+        });
+
+        canvas.on('mouse:over', function (evt) {
+            if (isInEraseMode && isMouseLeftButtonDown) {
+                canvas.remove(evt.target);
+            }
+        });
+
+        canvas.on('object:added', function (evt) {
+            setCanvasObjectDefaults(evt.target);
+        });
+
+        canvas.on('selection:cleared', function () {
+            if (currentMathImage) {
+                currentMathImage = null;
+                document.querySelector('.ink-formula').style.textShadow = '';
+            }
+        });
+
+        document.querySelector('.canvas-container').oncontextmenu = function(){return false};
+    }
+
+    function addDocumentEventListeners(){
         document.addEventListener( 'keydown', function(event){
             if(SPOTLIGHT_ENABLED && event.key === HOTKEYS.SPOTLIGHT){
                 if(spotlight){
@@ -382,65 +693,19 @@ let RevealInking = window.RevealInking || (function (){
                 canvas.clear();
             }
             if(event.key == HOTKEYS.SERIALIZE_CANVAS) {
-                serializeCanvas();
+                serializeCanvasToFile();
             }
         });
 
-        function createSpotlight(){
-            if(!SPOTLIGHT_ENABLED) {
-                return;
+        document.addEventListener( 'keyup', function(evt){
+            if(
+                MATH_ENABLED
+                && evt.key === HOTKEYS.INSERT_FORMULA
+                && document.querySelector('.canvas-container').style.display != 'none'
+            ) {
+                createNewFormulaWithQuery();
             }
-            if(spotlight){
-                destroySpotlight();
-            }
 
-            spotlight = new fabric.Circle({
-                radius: SPOTLIGHT_RADIUS,
-                left: mousePosition.x - SPOTLIGHT_RADIUS,
-                top: mousePosition.y - SPOTLIGHT_RADIUS,
-                hasControls: false,
-                hasBorders: false,
-                selectable: false,
-                evented: false,
-                fill: "white",
-                cursor: "none",
-                opacity: 1,
-                globalCompositeOperation: 'destination-out',
-            });
-            spotlightBackground = new fabric.Rect({
-                left: 0,
-                top: 0,
-                width: canvas.width,
-                height: canvas.height,
-                fill: "black",
-                hasControls: false,
-                hasBorders: false,
-                evented: false,
-                selectable: false,
-                opacity: SPOTLIGHT_BACKGROUND_OPACITY
-            });
-
-            canvas.selection = false;
-            canvas.defaultCursor = 'none';
-
-            // document.body.style.cursor = 'none';
-            canvas.add(spotlightBackground);
-            canvas.add(spotlight);
-            // canvas.renderAll();
-        }
-        function destroySpotlight(){
-            if(SPOTLIGHT_ENABLED && spotlight) {
-                canvas.remove(spotlight);
-                canvas.remove(spotlightBackground);
-                spotlight = null;
-                spotlightBackground = null;
-                canvas.selection = true;
-                canvas.defaultCursor = null;
-                // canvas.renderAll();
-            }
-        }
-
-        window.addEventListener( 'keyup', function(evt){
             if(evt.key === HOTKEYS.DRAW) {
                 canvasElement.dispatchEvent(new MouseEvent('mouseup', {
                     'view': window,
@@ -461,380 +726,9 @@ let RevealInking = window.RevealInking || (function (){
                 }
             }
         });
+    }
 
-        function toggleColorChoosers(b) {
-            for(let element of document.querySelectorAll('.ink-color')) {
-                element.style.visibility = b ? 'visible' : 'hidden';
-            }
-        }
-
-        function isCanvasVisible(){
-            let cContainer = document.querySelector('.canvas-container');
-            return !(cContainer.style.display === 'none');
-        }
-
-        function toggleCanvas(on){
-            let cContainer = document.querySelector('.canvas-container');
-            if(on === undefined) {
-                on = !isCanvasVisible();
-            }
-
-            if (on){
-                document.querySelector('.ink-hidecanvas').style.textShadow = '';
-                cContainer.style.display = 'block';
-            }
-            else {
-                destroySpotlight();
-                cContainer.style.display = 'none';
-                document.querySelector('.ink-hidecanvas').style.textShadow = CONTROLS_SHADOW;
-            }
-        };
-
-        function toggleDrawingMode() {
-            if (canvas.isDrawingMode) {
-                leaveDrawingMode();
-            }
-            else {
-                enterDrawingMode();
-            }
-        }
-        function enterDrawingMode(){
-            canvas.freeDrawingBrush.color = CURRENT_INK_COLOR;
-            canvas.isDrawingMode = true;
-            document.querySelector('.ink-pencil').style.textShadow = '0 0 10px ' + CURRENT_INK_COLOR;
-            toggleColorChoosers(true);
-        }
-        function leaveDrawingMode() {
-            canvas.isDrawingMode = false;
-            document.querySelector('.ink-pencil').style.textShadow = '';
-            toggleColorChoosers(false);
-        }
-
-        function createNewFormulaWithQuery(){
-            let currentFormula = null;
-            let currentMathColor = null;
-            let targetLeft = (mousePosition.x > 10 ? mousePosition.x : 10);
-            let targetTop = (mousePosition.y > 10 ? mousePosition.y : 10);
-            let targetAngle = null;
-            let targetScaleX = null;
-            let targetScaleY = null;
-
-            if(currentMathImage && canvas.getActiveObject() == currentMathImage){
-                targetLeft = currentMathImage.left;
-                targetTop = currentMathImage.top;
-                targetAngle = currentMathImage.angle;
-                targetScaleX = currentMathImage.scaleX / currentMathImage.mathMetadata.originalScaleX;
-                targetScaleY = currentMathImage.scaleY / currentMathImage.mathMetadata.originalScaleY;
-                currentMathColor = currentMathImage.mathMetadata.color;
-                currentFormula = currentMathImage.mathMetadata.latex;
-            }
-
-            let mathColor = (currentFormula && currentMathColor) || (MATH_COLOR === 'ink' ? CURRENT_INK_COLOR : MATH_COLOR);
-            document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + mathColor;
-
-            if(!mathRenderingDiv) {
-                mathRenderingDiv = document.createElement('div');
-                mathRenderingDiv.style.position = 'fixed';
-                mathRenderingDiv.style.top = '0px';
-                mathRenderingDiv.style.left = '0px';
-                mathRenderingDiv.style.opacity = 0;
-                mathRenderingDiv.style.color = mathColor;
-                document.body.appendChild(mathRenderingDiv);
-            }
-
-            let currentFontSize = window.getComputedStyle(Reveal.getCurrentSlide()).fontSize.toString();
-            mathRenderingDiv.style.fontSize = currentFontSize.replace(/^\d+/, (RENDERING_RESOLUTION * parseInt(currentFontSize)).toString());
-
-            let formula = (prompt('Enter a formula', currentFormula || '') || '').trim();
-
-            if(formula) {
-                if (currentMathImage) {
-                    canvas.remove(currentMathImage);
-                    currentMathImage = null;
-                }
-
-                mathRenderingDiv.innerHTML = '';
-                let mjMetrics = MathJax.getMetricsFor(mathRenderingDiv, DISPLAY_STYLE_MATH);
-
-                mathRenderingDiv.appendChild(MathJax.tex2svg(
-                    MATH_PREAMBLE + formula,
-                    mjMetrics
-                ));
-                let svg = mathRenderingDiv.querySelector('mjx-container > svg');
-                let svgString = mathRenderingDiv.querySelector('mjx-container').innerHTML;
-
-                fabric.loadSVGFromString(
-                    svgString,
-                    function(objects, options) {
-                        for(let obj of objects){
-                            obj.set({
-                                fill: mathColor
-                            });
-                        }
-
-                        let img = fabric.util.groupSVGElements(objects, options).setCoords();
-
-                        img.scaleToHeight(
-                            svg.height.baseVal.value * MATH_USER_SCALING
-                        );
-
-                        img.set({
-                            mathMetadata: {
-                                'latex': formula,
-                                'color': mathColor,
-                                'originalScaleX': img.scaleX,
-                                'originalScaleY': img.scaleY
-                            }
-                        });
-
-                        if(targetScaleX) {
-                            img.set({
-                                scaleX: img.scaleX * targetScaleX,
-                                scaleY: img.scaleY * targetScaleY,
-                            });
-                        }
-
-                        if(targetAngle) {
-                            img.set({
-                                angle: targetAngle
-                            });
-                        }
-
-                        img.set({
-                            left: targetLeft,
-                            top: targetTop,
-                            lockScalingFlip: true,
-                            hasRotatingPoint: false,
-                            hasBorders: true,
-                            centeredScaling: true
-                        });
-
-                        if (MATH_SHADOW) {
-                            img.set('shadow', new fabric.Shadow({
-                                blur: 10,
-                                offsetX: 1,
-                                offsetY: 1,
-                                color: MATH_SHADOW === true ? 'rgba(0,0,0,1)' : MATH_SHADOW
-                            }));
-                        }
-
-                        img.on('selected', function () {
-                            if(canvas.getActiveObject() == img) {
-                                currentMathImage = img;
-                                document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + mathColor;
-                            }
-                        });
-
-                        img.on('mousedblclick', function () {
-                            currentMathImage = img;
-                            createNewFormulaWithQuery();
-                        });
-
-                        canvas.add(img);
-                        canvas.setActiveObject(img);
-                    }
-                );
-            }
-            else {
-                document.querySelector('.ink-formula').style.textShadow = '';
-            }
-        }
-
-        function addInkingControlsEventListeners() {
-            document.querySelector('.ink-pencil').addEventListener('click',
-                toggleDrawingMode
-            );
-
-            document.querySelector('.ink-erase').addEventListener('click',function(){
-                if (isInEraseMode){
-                    leaveDeletionMode();
-                }
-                else{
-                    enterDeletionMode();
-                }
-            });
-
-            document.querySelector('.ink-clear').addEventListener('mousedown', function (event) {
-                let btn = event.target;
-                btn.style.textShadow = CONTROLS_SHADOW;
-                setTimeout(function () {
-                    btn.style.textShadow = '';
-                }, 200);
-                canvas.clear();
-            });
-
-            for(let element of document.querySelectorAll('.ink-color')){
-                element.addEventListener('mousedown', function(event){
-                    let btn = event.target;
-                    CURRENT_INK_COLOR = btn.style.color;
-                    canvas.freeDrawingBrush.color = CURRENT_INK_COLOR;
-                    if(canvas.isDrawingMode) {
-                        document.querySelector('.ink-pencil').style.textShadow = '0 0 10px ' + CURRENT_INK_COLOR;
-                    }
-                    btn.style.textShadow = '0 0 20px ' + btn.style.color;
-                    setTimeout( function(){btn.style.textShadow = '';}, 200 );
-                });
-            }
-
-            document.querySelector('.ink-hidecanvas').addEventListener('click',
-                toggleCanvas
-            );
-
-            document.querySelector('.ink-serializecanvas').addEventListener('click',
-                serializeCanvas
-            );
-
-            if(MATH_ENABLED) {
-                document.querySelector('.ink-formula').addEventListener(
-                    'click',
-                    createNewFormulaWithQuery
-                );
-            }
-        }
-
-        function addCanvasEventListeners() {
-            canvas.on('mouse:down', function (options) {
-                isMouseLeftButtonDown = true;
-                mousePosition.x = options.e.layerX;
-                mousePosition.y = options.e.layerY;
-                if (SPOTLIGHT_ENABLED && options.e.altKey) {
-                    createSpotlight();
-                } else {
-                    if (options.target && options.target.mathMetadata) {
-                        currentMathImage = options.target;
-                    }
-                }
-            });
-            canvas.on('mouse:up', function (options) {
-                isMouseLeftButtonDown = false;
-                if (SPOTLIGHT_ENABLED && options.e.altKey) {
-                    destroySpotlight();
-                }
-            });
-
-            canvas.on('mouse:move', function (options) {
-                mousePosition.x = options.e.layerX;
-                mousePosition.y = options.e.layerY;
-                if (spotlight) {
-                    spotlight.set({
-                        left: mousePosition.x - spotlight.radius,
-                        top: mousePosition.y - spotlight.radius
-                    });
-                    canvas.renderAll();
-                }
-            });
-
-            canvas.on('mouse:over', function (evt) {
-                if (isInEraseMode && isMouseLeftButtonDown) {
-                    canvas.remove(evt.target);
-                }
-            });
-
-            canvas.on('object:added', function (evt) {
-                let obj = evt.target;
-                obj.set({
-                    hasControls: true,
-                    hasBorders: true,
-                    lockScalingFlip: true,
-                    centeredScaling: true,
-                    lockUniScaling: true,
-                    hasRotatingPoint: false
-                });
-            });
-
-            canvas.on('selection:cleared', function () {
-                if (currentMathImage) {
-                    currentMathImage = null;
-                    document.querySelector('.ink-formula').style.textShadow = '';
-                }
-            });
-
-            document.querySelector('.canvas-container').oncontextmenu = function(){return false};
-        }
-
-        window.addEventListener('load', function(event) {
-            let controls = document.createElement( 'aside' );
-            controls.classList.add( 'ink-controls' );
-
-            let colorControls = '';
-
-            if(Array.isArray(INK_COLORS)) {
-                for(let color of INK_COLORS){
-                    color = color.trim();
-                    if(color) {
-                        colorControls += '<div class="ink-color ink-control-button" style="color: ' + color + '"></div>';
-                    }
-                }
-            }
-
-            controls.innerHTML =
-                colorControls
-                + '<div class="ink-pencil ink-control-button"></div>'
-                + '<div class="ink-erase ink-control-button"></div>'
-                + (MATH_ENABLED ? '<div class="ink-formula ink-control-button"></div>' : '')
-                + '<div class="ink-clear ink-control-button"></div>'
-                + '<div class="ink-hidecanvas ink-control-button"></div>'
-                + '<div class="ink-serializecanvas ink-control-button"></div>';
-            document.body.appendChild( controls );
-
-            toggleColorChoosers(false);
-            addInkingControlsEventListeners();
-            resetMainCanvasDomNode();
-
-            if(PREDEFINED_CANVAS_CONTENT) {
-                for(let c of PREDEFINED_CANVAS_CONTENT) {
-                    let slide;
-                    if(c.slideId) {
-                        slide = document.getElementById(c.slideId);
-                    }
-                    else if(c.slideNumber) {
-                        let slides = document.querySelectorAll('.reveal .slides section');
-                        if(slides && c.slideNumber < slides.length) {
-                            slide = slides[c.slideNumber];
-                        }
-                    }
-                    if(slide && !slide.dataset.inkingCanvasContent && c.inkingCanvasContent) {
-                        slide.dataset.inkingCanvasContent = JSON.stringify(c.inkingCanvasContent);
-                    }
-                }
-            }
-            for(let slide of document.querySelectorAll('section[data-inking-canvas-content]')) {
-                if(slide.dataset.inkingCanvasContent && slide.dataset.inkingCanvasContent.toLowerCase().endsWith('.svg')){
-                    fabric.loadSVGFromURL(
-                        slide.dataset.inkingCanvasContent,
-                        function (objects) {
-                            let s = [];
-                            for(let obj of objects) {
-                                s.push(obj.toObject());
-                            }
-                            slide.dataset.inkingCanvasContent = JSON.stringify({
-                                objects: s
-                            });
-                        }
-                    );
-                }
-            }
-
-            let slide = Reveal.getCurrentSlide();
-            if(slide.dataset.inkingCanvasContent){
-                setTimeout(function(){
-                    loadCanvasFromMathEnrichedJSON(slide.dataset.inkingCanvasContent);
-                }, parseInt(window.getComputedStyle(slide).transitionDuration) || 800);
-            }
-
-            addCanvasEventListeners();
-        });
-
-        window.addEventListener('resize', function (event) {
-            destroySpotlight();
-            leaveDeletionMode();
-            let s = getMathEnrichedCanvasJSON();
-            resetMainCanvasDomNode();
-            loadCanvasFromMathEnrichedJSON(s);
-            addCanvasEventListeners();
-        });
-
-
+    function addRevealEventListeners(){
         Reveal.addEventListener('overviewshown', function (event) {
             canvasVisibleBeforeRevealOverview = isCanvasVisible();
             toggleCanvas(false);
@@ -864,19 +758,223 @@ let RevealInking = window.RevealInking || (function (){
             }
             leaveDeletionMode();
         });
+    }
 
-        if(MATH_ENABLED) {
-            window.addEventListener( 'keyup',function(evt){
-                    if(document.querySelector('.canvas-container').style.display == 'none')
-                        return;
+    function serializeCanvasToFile(){
+        function download(filename, text) {
+            let element = document.createElement('a');
+            element.style.display = 'none';
 
-                    if(evt.key === HOTKEYS.INSERT_FORMULA) {
-                        createNewFormulaWithQuery();
-                    }
-            });
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
         }
-    });
 
+        destroySpotlight();
+
+        let text, filename;
+        if(confirm("Save current slide to SVG? (Press Cancel to save current or all slides to JSON.)")) {
+            text = canvas.toSVG();
+            filename = 'canvas.svg';
+        }
+        else {
+            if(confirm("Save all slides content? (Press Cancel to save only the current slide.)")){
+                filename = 'all_slides.json';
+                Reveal.getCurrentSlide().dataset.inkingCanvasContent = getMathEnrichedCanvasJSON();
+                let allSlidesContent = [];
+
+                toArray(
+                    document.querySelectorAll('.reveal .slides section')
+                ).forEach(function(slide, slideNumber){
+                    if(slide.dataset.inkingCanvasContent) {
+                        if(slide.id)
+                            allSlidesContent.push({
+                                slideId: slide.id,
+                                inkingCanvasContent: JSON.parse(slide.dataset.inkingCanvasContent)
+                            })
+                        else
+                            allSlidesContent.push({
+                                slideNumber: slideNumber,
+                                inkingCanvasContent: JSON.parse(slide.dataset.inkingCanvasContent)
+                            })
+                    }
+                });
+                text = JSON.stringify(allSlidesContent)
+            }
+            else {
+                filename = 'canvas.json';
+                text = getMathEnrichedCanvasJSON();
+            }
+        }
+        download(filename, text);
+    }
+
+    function loadSVGFromURL(url, loadAsGroup){
+        window.fabric.loadSVGFromURL(
+            url,
+            function (objects) {
+                for(let obj of objects) {
+                    setCanvasObjectDefaults(obj);
+                    if(!loadAsGroup) {
+                        canvas.add(obj);
+                    }
+                }
+                if(loadAsGroup) {
+                    let group = new window.fabric.Group(objects);
+                    canvas.add(group);
+                }
+            },
+        );
+    }
+
+    function loadPredefinedCanvasContent(){
+        if(PREDEFINED_CANVAS_CONTENT) {
+            let slides = document.querySelectorAll('.reveal .slides section');
+            function loadMultipleSlides(arrayOfContent) {
+                for (let c of arrayOfContent) {
+                    let slide;
+                    if (c.slideId) {
+                        slide = document.getElementById(c.slideId);
+                    } else if (c.slideNumber) {
+                        if (slides && c.slideNumber < slides.length) {
+                            slide = slides[c.slideNumber];
+                        }
+                    }
+                    if (slide && !slide.dataset.inkingCanvasSrc && c.inkingCanvasContent) {
+                        slide.dataset.inkingCanvasContent = JSON.stringify(c.inkingCanvasContent);
+                    }
+                }
+            }
+
+            if (Array.isArray(PREDEFINED_CANVAS_CONTENT)) {
+                loadMultipleSlides(PREDEFINED_CANVAS_CONTENT);
+            }
+            else if (typeof PREDEFINED_CANVAS_CONTENT === "string"){
+                if(PREDEFINED_CANVAS_CONTENT.toLowerCase().endsWith('.json')){
+                    let url = PREDEFINED_CANVAS_CONTENT;
+                    let xhr = new XMLHttpRequest();
+
+                    xhr.onreadystatechange = function( xhr, url, slides  ) {
+                        return function() {
+                            if ( xhr.readyState !== 4 ) {
+                                return;
+                            }
+                            if (!
+                                (( xhr.status >= 200 && xhr.status < 300 ) ||
+                                    ( xhr.status === 0 && xhr.responseText !== '')
+                                )) {
+                                console.log(
+                                    'ERROR: The attempt to fetch ' + url +
+                                    ' failed with HTTP status ' + xhr.status + '.'
+                                );
+
+                                return;
+                            }
+
+                            let text = xhr.responseText.trim();
+                            if(text.startsWith('{')) {
+                                for (let slide of slides)
+                                    slide.dataset.inkingCanvasContent = text;
+                            }
+                            else {
+                                loadMultipleSlides(JSON.parse(text));
+                            }
+                        };
+                    }( xhr, url, slides );
+
+                    xhr.open( "GET", url, false );
+                    try {
+                        xhr.send();
+                    }
+                    catch ( e ) {
+                        console.log(
+                            'Failed to get the file ' + url +
+                            '. Make sure that the presentation and the file are served by a ' +
+                            'HTTP server and the file can be found there. ' + e
+                        );
+                    }
+                }
+                else {
+                    for(let slide of slides){
+                        slide.dataset.inkingCanvasContent = PREDEFINED_CANVAS_CONTENT;
+                    }
+                }
+            }
+            else {
+                let slides = document.querySelectorAll('.reveal .slides section');
+                for(let slide of slides){
+                    slide.dataset.inkingCanvasContent = JSON.stringify(PREDEFINED_CANVAS_CONTENT);
+                }
+            }
+        }
+
+        for(let slide of document.querySelectorAll('section[data-inking-canvas-src]')) {
+            if(!slide.dataset.inkingCanvasSrc)
+                continue;
+            if(slide.dataset.inkingCanvasSrc.toLowerCase().endsWith('.svg')) {
+                let inkingCanvasSrc = slide.dataset.inkingCanvasSrc;
+
+                if(inkingCanvasSrc.includes('::')){
+                    let tokens = inkingCanvasSrc.split('::');
+                    let path = tokens[0];
+                    let extension = tokens[tokens.length-1];
+                    let filenames = tokens.slice(1, tokens.length-1);
+                    for(let filename of filenames){
+                        if(filename.endsWith('/')) {
+                            loadSVGFromURL(path + filename.slice(0, filename.length-1) + extension, false)
+                        }
+                        else {
+                            loadSVGFromURL(path + filename + extension, true);
+                        }
+                    }
+                }
+                else {
+                    loadSVGFromURL(inkingCanvasSrc, true);
+                }
+            }
+            else if(slide.dataset.inkingCanvasSrc.toLowerCase().endsWith('.json')) {
+                let xhr = new XMLHttpRequest();
+                let url = slide.dataset.inkingCanvasSrc;
+
+                xhr.onreadystatechange = function( xhr, url, slide  ) {
+
+                    return function() {
+                        if ( xhr.readyState !== 4 ) {
+                            return;
+                        }
+                        if (!
+                            (( xhr.status >= 200 && xhr.status < 300 ) ||
+                                ( xhr.status === 0 && xhr.responseText !== '')
+                            )) {
+                            console.log(
+                                'ERROR: The attempt to fetch ' + url +
+                                ' failed with HTTP status ' + xhr.status + '.'
+                            );
+
+                            return;
+                        }
+
+                        slide.dataset.inkingCanvasContent = xhr.responseText;
+                    };
+                }( xhr, url, slide );
+
+                xhr.open( "GET", url, false );
+                try {
+                    xhr.send();
+                }
+                catch ( e ) {
+                    console.log(
+                        'Failed to get the file ' + url +
+                        '. Make sure that the presentation and the file are served by a ' +
+                        'HTTP server and the file can be found there. ' + e
+                    );
+                }
+            }
+        }
+    }
 
     function loadScript( params, extraCallback ) {
         if(params.condition !== undefined
@@ -958,6 +1056,40 @@ let RevealInking = window.RevealInking || (function (){
             loadScripts(scripts, callback);
         });
     }
+
+    loadScripts(scriptsToLoad, function () {
+        window.addEventListener('load', function(event) {
+            // This is important for MathJax equations to serialize well into fabric.js
+            window.fabric.Object.NUM_FRACTION_DIGITS = 5;
+
+            toggleColorChoosers(false);
+            resetMainCanvasDomNode();
+            addInkingControls();
+            loadPredefinedCanvasContent();
+
+            let slide = Reveal.getCurrentSlide();
+            if(slide.dataset.inkingCanvasContent){
+                setTimeout(function(){
+                    loadCanvasFromMathEnrichedJSON(slide.dataset.inkingCanvasContent);
+                }, parseInt(window.getComputedStyle(slide).transitionDuration) || 800);
+            }
+
+            addDocumentEventListeners();
+            addCanvasEventListeners();
+            addRevealEventListeners();
+            addInkingControlsEventListeners();
+
+            window.addEventListener('resize', function (event) {
+                destroySpotlight();
+                leaveDeletionMode();
+                let serializedCanvas = getMathEnrichedCanvasObject();
+                resetMainCanvasDomNode();
+                loadCanvasFromMathEnrichedObject(serializedCanvas);
+                addCanvasEventListeners();
+            });
+        });
+    });
+
 
     return true;
 })();
