@@ -945,3 +945,5 @@ let RevealMenu = window.RevealMenu || (function(){
 	
 	return module;
 })();
+
+Reveal.registerPlugin( 'menu', RevealMenu );

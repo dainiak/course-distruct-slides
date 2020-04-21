@@ -10,6 +10,7 @@ let RevealMath = window.RevealMath || (function() {
 	options.mathjaxUrl = options.mathjaxUrl || 'https://cdn.jsdelivr.net/npm/mathjax@3.0.5/es5/tex-svg-full.js';
 
 	options.resetFragmentIndicesAfterTypeset = (options.resetFragmentIndicesAfterTypeset !== false);
+    options.fragmentIndexCSS = (options.fragmentIndexCSS !== false);
     options.macros = options.macros || {};
 
     window.MathJax = {
@@ -241,3 +242,5 @@ let RevealMath = window.RevealMath || (function() {
 
     return true;
 })();
+
+Reveal.registerPlugin( 'math', RevealMath );

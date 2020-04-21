@@ -2289,9 +2289,9 @@
 						dom.slides.style.right = '';
 						transformSlides( { layout: '' } );
 					}
-						// Transform Scaling
-						// Content layout remains the exact same when scaled up.
-						// Side effect is content becoming blurred, especially with
+					// Transform Scaling
+					// Content layout remains the exact same when scaled up.
+					// Side effect is content becoming blurred, especially with
 					// high scale values on ldpi screens.
 					else {
 						dom.slides.style.zoom = '';

@@ -154,3 +154,5 @@ let RevealHighlight = (function() {
 
 	return true;
 })();
+
+Reveal.registerPlugin( 'highlightAce', RevealHighlight );

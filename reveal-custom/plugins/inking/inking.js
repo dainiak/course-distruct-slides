@@ -25,6 +25,8 @@ let RevealInking = window.RevealInking || (function (){
     let CONTROLS_SHADOW = options.controls.shadow || '0 0 5px black';
     let CONTROLS_OPACITY = options.controls.opacity || 1;
 
+    let COLOR_CHOOSERS_ALWAYS_VISIBLE = options.controls.colorChoosersAlwaysVisible !== false;
+
     options.ink = options.ink || {};
     let INK_COLORS = options.ink.color || [
         'rgb(250,250,250)',
@@ -204,8 +206,11 @@ let RevealInking = window.RevealInking || (function (){
     }
 
     function toggleColorChoosers(b) {
+        if(COLOR_CHOOSERS_ALWAYS_VISIBLE && !b) {
+            return;
+        }
         for(let element of document.querySelectorAll('.ink-color')) {
-            element.style.visibility = b ? 'visible' : 'hidden';
+            element.style.visibility = (b ? 'visible' : 'hidden');
         }
     }
 
@@ -349,6 +354,7 @@ let RevealInking = window.RevealInking || (function (){
             leaveDrawingMode();
         }
         else {
+            leaveDeletionMode();
             enterDrawingMode();
         }
     }
@@ -1062,9 +1068,10 @@ let RevealInking = window.RevealInking || (function (){
             // This is important for MathJax equations to serialize well into fabric.js
             window.fabric.Object.NUM_FRACTION_DIGITS = 5;
 
-            toggleColorChoosers(false);
+
             resetMainCanvasDomNode();
             addInkingControls();
+            toggleColorChoosers(false);
             loadPredefinedCanvasContent();
 
             let slide = Reveal.getCurrentSlide();
@@ -1093,3 +1100,5 @@ let RevealInking = window.RevealInking || (function (){
 
     return true;
 })();
+
+Reveal.registerPlugin( 'inking', RevealInking );
