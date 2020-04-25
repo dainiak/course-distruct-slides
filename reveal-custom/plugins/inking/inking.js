@@ -16,9 +16,7 @@
 let RevealInking = window.RevealInking || (function (){
     let options = Reveal.getConfig().inking || {};
 
-    let RENDERING_RESOLUTION = options.renderingResolution || 1;
     let CANVAS_ABOVE_CONTROLS = !!(options.canvasAboveControls);
-
     let CONTROLS_VISIBLE = options.controls !== false;
     options.controls = options.controls || {};
     let CONTROLS_COLOR = options.controls.color || 'rgb(0,0,0)';
@@ -42,6 +40,7 @@ let RevealInking = window.RevealInking || (function (){
     options.math = options.math || {};
     let MATH_COLOR = options.math.color || 'rgb(250,250,250)';
     let MATH_SHADOW = options.math.shadow || false;
+    let MATH_SCALE_TO_SLIDE_TEXT = options.math.scaleToSlideText !== false;
     let DISPLAY_STYLE_MATH = options.math.displayStyle !== false;
     let MATH_USER_SCALING = options.math.scaling || 1;
     let MATH_PREAMBLE = (options.math && options.math.preamble) ? ('{' + options.math.preamble + '}') : '';
@@ -486,7 +485,13 @@ let RevealInking = window.RevealInking || (function (){
         }
 
         let currentFontSize = window.getComputedStyle(Reveal.getCurrentSlide()).fontSize.toString();
-        mathRenderingDiv.style.fontSize = currentFontSize.replace(/^\d+/, (RENDERING_RESOLUTION * parseInt(currentFontSize)).toString());
+        if(MATH_SCALE_TO_SLIDE_TEXT) {
+            currentFontSize = currentFontSize.replace(
+                /^\d+/,
+                Math.round(Reveal.getScale() * parseInt(currentFontSize))
+            )
+        }
+        mathRenderingDiv.style.fontSize = currentFontSize;
 
         let formula = (prompt('Enter a formula', currentFormula || '') || '').trim();
 
