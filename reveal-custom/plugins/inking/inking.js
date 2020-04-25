@@ -96,7 +96,7 @@ let RevealInking = window.RevealInking || (function (){
                 + '.ink-serializecanvas:before {content: "\u2B07"} ',
             type: 'text/css'
         }, {
-            url: 'https://cdn.jsdelivr.net/npm/fabric@4.0.0-beta.10/dist/fabric.min.js',
+            url: 'https://cdn.jsdelivr.net/npm/fabric@4.0.0-beta.11/dist/fabric.min.js',
             condition: !window.fabric
         },
         {
@@ -179,6 +179,10 @@ let RevealInking = window.RevealInking || (function (){
         return Array.prototype.slice.call( o );
     }
 
+    function isMathImage(fabricObject){
+        return fabricObject && fabricObject.mathMetadata !== undefined;
+    }
+
     function addInkingControls(){
         let controls = document.createElement( 'aside' );
         controls.classList.add( 'ink-controls' );
@@ -216,11 +220,53 @@ let RevealInking = window.RevealInking || (function (){
 
     function setCanvasObjectDefaults(obj){
         obj.set({
-            hasControls: true,
-            hasBorders: true,
             lockScalingFlip: true,
             centeredScaling: true,
-            hasRotatingPoint: false
+
+            hasBorders: true,
+            // borderColor: '#ff0000',
+
+            hasControls: true,
+            cornerStyle: 'circle', // or 'rect'
+            cornerSize: 10,
+            // cornerColor: 'rgba(0,255,0,0.2)',
+            // cornerStrokeColor: '#000000',
+        });
+
+        obj.setControlsVisibility({
+            mtr: false,
+            mt: false,
+            mb: false,
+            ml: false,
+            mr: false
+        });
+    }
+
+    function setMathImageDefaults(obj) {
+        setCanvasObjectDefaults(obj);
+
+        if (MATH_SHADOW) {
+            obj.set({
+                'shadow': new window.fabric.Shadow({
+                    blur: 10,
+                    offsetX: 1,
+                    offsetY: 1,
+                    color: MATH_SHADOW === true ? 'rgba(0,0,0,1)' : MATH_SHADOW
+                })
+            });
+        }
+
+        obj.set({
+            lockScalingFlip: true,
+            hasBorders: true,
+            centeredScaling: true
+        });
+        obj.setControlsVisibility({
+            mtr: false,
+            mt: false,
+            mb: false,
+            ml: false,
+            mr: false
         });
     }
 
@@ -253,7 +299,8 @@ let RevealInking = window.RevealInking || (function (){
 
         canvas = new window.fabric.Canvas(canvasElement, {
             perPixelTargetFind: true,
-            renderOnAddRemove: true
+            renderOnAddRemove: true,
+            uniformScaling: true
         });
 
         canvas.upperCanvasEl.style.position = 'fixed';
@@ -389,27 +436,8 @@ let RevealInking = window.RevealInking || (function (){
         }
     }
 
-    function setMathImageShadow(img){
-        if (MATH_SHADOW) {
-            img.set('shadow', new window.fabric.Shadow({
-                blur: 10,
-                offsetX: 1,
-                offsetY: 1,
-                color: MATH_SHADOW === true ? 'rgba(0,0,0,1)' : MATH_SHADOW
-            }));
-        }
-    }
-
-    function setMathImageScalingLocks(img) {
-        img.set({
-            lockScalingFlip: true,
-            hasRotatingPoint: false,
-            hasBorders: true,
-            centeredScaling: true
-        });
-    }
-
-    function addMathImageEventListeners(img, mathColor){
+    function addMathImageEventListeners(img){
+        let mathColor = img.mathMetadata.color;
         img.on('selected', function () {
             if(canvas.getActiveObject() == img) {
                 currentMathImage = img;
@@ -476,10 +504,9 @@ let RevealInking = window.RevealInking || (function (){
                 mjMetrics
             ));
             let svg = mathRenderingDiv.querySelector('mjx-container > svg');
-            let svgString = mathRenderingDiv.querySelector('mjx-container').innerHTML;
 
             window.fabric.loadSVGFromString(
-                svgString,
+                svg.outerHTML,
                 function(objects, options) {
                     for(let obj of objects){
                         obj.set({
@@ -520,9 +547,8 @@ let RevealInking = window.RevealInking || (function (){
                         top: targetTop
                     });
 
-                    setMathImageScalingLocks(img);
-                    setMathImageShadow(img);
-                    addMathImageEventListeners(img, mathColor);
+                    setMathImageDefaults(img);
+                    addMathImageEventListeners(img);
 
                     canvas.add(img);
                     canvas.setActiveObject(img);
@@ -547,9 +573,9 @@ let RevealInking = window.RevealInking || (function (){
         let objects = canvas.getObjects();
         if(objects.length) {
             objects.forEach(function (obj) {
-                if (obj.mathMetadata && MATH_ENABLED) {
-                    addMathImageEventListeners(obj, obj.mathMetadata.color);
-                    setMathImageShadow(obj);
+                if (isMathImage(obj) && MATH_ENABLED) {
+                    setMathImageDefaults(obj);
+                    addMathImageEventListeners(obj);
                 }
                 else{
                     setCanvasObjectDefaults(obj);
@@ -621,7 +647,7 @@ let RevealInking = window.RevealInking || (function (){
             if (SPOTLIGHT_ENABLED && options.e.altKey) {
                 createSpotlight();
             } else {
-                if (options.target && options.target.mathMetadata) {
+                if (isMathImage(options.target)) {
                     currentMathImage = options.target;
                 }
             }
@@ -652,7 +678,9 @@ let RevealInking = window.RevealInking || (function (){
         });
 
         canvas.on('object:added', function (evt) {
-            setCanvasObjectDefaults(evt.target);
+            if(!isMathImage(evt.target)){
+                setCanvasObjectDefaults(evt.target)
+            }
         });
 
         canvas.on('selection:cleared', function () {
