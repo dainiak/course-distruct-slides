@@ -1,17 +1,15 @@
 let RevealMath = window.RevealMath || (function() {
 	let options = Reveal.getConfig().math || {};
-	// options.mathjaxUrl — URL of MathJax library to load
-    // options.mathjaxConfig — custom configuration for MathJax
-    // options.svgMathEnabled — use MathJax to render latex notation within SVG images
-    // options.svgMathFixedScale — fixed scaling factor for math within SVG images
-    // options.svgMathEscapeClipping — don’t clip contents of the formula
-    options.svgMathScale = options.svgMathScale || 0.0015;
-
-	options.mathjaxUrl = options.mathjaxUrl || 'https://cdn.jsdelivr.net/npm/mathjax@3.0.5/es5/tex-svg-full.js';
-
-	options.resetFragmentIndicesAfterTypeset = (options.resetFragmentIndicesAfterTypeset !== false);
-    options.fragmentIndexCSS = (options.fragmentIndexCSS !== false);
-    options.macros = options.macros || {};
+    options = {
+        svgMathScale: options.svgMathScale || 0.0015,
+        svgMathFixedScale: !!(options.svgMathFixedScale),
+        svgMathEscapeClipping: !!(options.svgMathEscapeClipping),
+        mathjaxUrl: options.mathjaxUrl || 'https://cdn.jsdelivr.net/npm/mathjax@3.0.5/es5/tex-svg-full.js',
+        resetFragmentIndicesAfterTypeset: options.resetFragmentIndicesAfterTypeset !== false,
+        fragmentIndexCSS: options.fragmentIndexCSS !== false,
+        macros: options.macros || {},
+        svgMathEnabled: !!(options.svgMathEnabled),
+    };
 
     window.MathJax = {
         options: {
@@ -31,6 +29,7 @@ let RevealMath = window.RevealMath || (function() {
         startup: {
             typeset: false,
             ready: () => {
+                // Hotfix for glitch with MathJax 3.0.5 SVG rendering
                 if (MathJax.version === '3.0.5') {
                     const SVGWrapper = MathJax._.output.svg.Wrapper.SVGWrapper;
                     const CommonWrapper = SVGWrapper.prototype.__proto__;
@@ -129,7 +128,7 @@ let RevealMath = window.RevealMath || (function() {
 
             let x0 = x;
             let y0 = y;
-            let x1 = 0;
+            let x1;
 
             justification = justification || 'L';
             switch(justification) {
@@ -222,7 +221,7 @@ let RevealMath = window.RevealMath || (function() {
 
                 for(let i = 0; i < 15; ++i) {
                     let fragments = slide.querySelectorAll('.fragment.fragidx-' + i.toString());
-                    if(fragments.length == 0 && i >= 1)
+                    if(fragments.length === 0 && i >= 1)
                         break;
                     for(let fragment of fragments)
                         fragment.setAttribute('data-fragment-index', i);
