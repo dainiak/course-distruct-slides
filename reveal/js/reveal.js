@@ -440,8 +440,8 @@
 		if( typeof query['dependencies'] !== 'undefined' ) delete query['dependencies'];
 
 		// Copy options over to our config object
-		extend( config, options );
-		extend( config, query );
+		Object.assign( config, options );
+		Object.assign( config, query );
 
 		// Hide the address bar in mobile browsers
 		hideAddressBar();
@@ -1312,7 +1312,7 @@
 
 		// New config options may be passed when this method
 		// is invoked through the API after initialization
-		if( typeof options === 'object' ) extend( config, options );
+		if( typeof options === 'object' ) Object.assign( config, options );
 
 		// Abort if reveal.js hasn't finished loading, config
 		// changes will be applied automatically once loading
@@ -1675,23 +1675,6 @@
 	}
 
 	/**
-	 * Extend object a with the properties of object b.
-	 * If there's a conflict, object b takes precedence.
-	 *
-	 * @param {object} a
-	 * @param {object} b
-	 */
-	function extend( a, b ) {
-
-		for( var i in b ) {
-			a[ i ] = b[ i ];
-		}
-
-		return a;
-
-	}
-
-	/**
 	 * Converts the target object to an array.
 	 *
 	 * @param {object} o
@@ -1992,7 +1975,7 @@
 
 		var event = document.createEvent( 'HTMLEvents', 1, 2 );
 		event.initEvent( type, true, true );
-		extend( event, args );
+		Object.assign( event, args );
 		dom.wrapper.dispatchEvent( event );
 
 		// If we're in an iframe, post each reveal.js event to the
@@ -2013,7 +1996,7 @@
 				state: getState()
 			};
 
-			extend( message, data );
+			Object.assign( message, data );
 
 			window.parent.postMessage( JSON.stringify( message ), '*' );
 		}
@@ -4200,7 +4183,7 @@
 	 */
 	function stopEmbeddedContent( element, options ) {
 
-		options = extend( {
+		options = Object.assign( {
 			// Defaults
 			unloadIframes: true
 		}, options || {} );

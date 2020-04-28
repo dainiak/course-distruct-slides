@@ -42,10 +42,12 @@
         menu: {
             openSlideNumber: true,
             openButton: false,
-            themes: false,
-            // themesPath: '../reveal/css/theme/',
+            themes: true,
+            themesPath: '../reveal/css/theme/',
             transitions: true,
-            titleSelector: 'h1,h2,h3,h4,h5,h6,figcaption'
+            titleSelector: 'h1, h2, h3, h4, h5, h6, figcaption, div.theorem > div.title',
+            // autoOpen: true,
+            // sticky: true
         },
         math: {
             svgMathEnabled: true,
@@ -58,7 +60,8 @@
                 euler: "\\varphi",
                 card: ["\\lvert #1 \\rvert", 1],
                 GCD: "\\mathrm{GCD}",
-                any: "\u25A7",
+                // any: "\u25A7",
+                any: "\u25A3",
                 eqmod: ["\\overset{#1}{=}", 1],
                 neqmod: ["\\overset{\\scriptsize{#1}}{\\neq}", 1],
             }
@@ -93,25 +96,26 @@
                 }
             },
             {
-                src: '../reveal-custom/plugins/menu/menu.js'
+                src: '../reveal-custom/plugins/menu/menu.js',
+                async: false
             },
             {
                 src: '../reveal-custom/plugins/math-mod/math.js',
                 async: false
             },
-            {
-                src: '../reveal-custom/plugins/inking/inking.js',
-                async: false
-            },
+            // {
+            //     src: '../reveal-custom/plugins/inking/inking.js',
+            //     async: false
+            // },
             // {
             //     src: '../reveal-custom/plugins/webcam/webcam.js'
             // },
-            {
-                src: '../reveal-custom/plugins/highlight-ace/highlight-ace.js',
-                condition: function () {
-                    return !!document.querySelector('pre code');
-                }
-            },
+            // {
+            //     src: '../reveal-custom/plugins/highlight-ace/highlight-ace.js',
+            //     condition: function () {
+            //         return !!document.querySelector('pre code');
+            //     }
+            // },
             {
                 src: '../reveal/plugin/notes/notes.js'
             },
