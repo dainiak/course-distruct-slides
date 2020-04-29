@@ -122,9 +122,9 @@ let RevealMenu = window.RevealMenu || (function(){
 			// wait until the mouse has moved before re-enabling mouse selection
 			// to avoid selections on scroll
 			document.querySelector(
-				'nav.slide-menu'
+				'nav.rmenu'
 			).addEventListener('mousemove', function fn() {
-					document.querySelector('nav.slide-menu').removeEventListener('mousemove', fn);
+					document.querySelector('nav.rmenu').removeEventListener('mousemove', fn);
 					//XXX this should select the item under the mouse
 					mouseSelectionEnabled = true;
 			});
@@ -174,7 +174,7 @@ let RevealMenu = window.RevealMenu || (function(){
 		// }
 
 		function deselectAllMenuItems() {
-			for(let item of document.querySelectorAll('.active-menu-panel .slide-menu-items li.selected')) {
+			for(let item of document.querySelectorAll('.active-menu-panel .rmenu-items li.selected')) {
 				item.classList.remove('selected');
 			}
 		}
@@ -189,13 +189,13 @@ let RevealMenu = window.RevealMenu || (function(){
 
 		function getSlideMenuItem(h, v) {
 			return document.querySelector(
-				'.active-menu-panel .slide-menu-items li[data-slide-h="' + h + '"][data-slide-v="' + v + '"]'
+				'.active-menu-panel .rmenu-items li[data-slide-h="' + h + '"][data-slide-v="' + v + '"]'
 			);
 		}
 
 		function getMenuItem(itemIndex) {
 			return document.querySelector(
-				'.active-menu-panel .slide-menu-items li[data-item-index="' + itemIndex + '"]'
+				'.active-menu-panel .rmenu-items li[data-item-index="' + itemIndex + '"]'
 			);
 		}
 
@@ -205,9 +205,9 @@ let RevealMenu = window.RevealMenu || (function(){
 
 		function getSelectedMenuItem() {
 			return document.querySelector(
-				'.active-menu-panel .slide-menu-items li.selected'
+				'.active-menu-panel .rmenu-items li.selected'
 			) || document.querySelector(
-				'.active-menu-panel .slide-menu-items li.active'
+				'.active-menu-panel .rmenu-items li.active'
 			);
 		}
 		function onDocumentKeyDown(event) {
@@ -234,7 +234,7 @@ let RevealMenu = window.RevealMenu || (function(){
 						deselectAllMenuItems();
 
 						if (!currItem) {
-							currItem = document.querySelector('.active-menu-panel .slide-menu-items li.slide-menu-item');
+							currItem = document.querySelector('.active-menu-panel .rmenu-items li.rmenu-item');
 							if (currItem) {
 								selectMenuItem(currItem);
 							}
@@ -282,7 +282,7 @@ let RevealMenu = window.RevealMenu || (function(){
 						deselectAllMenuItems();
 
 						item = document.querySelector(
-							'.active-menu-panel .slide-menu-items li:'
+							'.active-menu-panel .rmenu-items li:'
 							+
 							(event.key === 'Home' ? 'first' : 'last')
 							+
@@ -296,7 +296,7 @@ let RevealMenu = window.RevealMenu || (function(){
 						break;
 
 					case ' ': case 'Enter':
-						currItem = document.querySelector('.active-menu-panel .slide-menu-items li.selected');
+						currItem = document.querySelector('.active-menu-panel .rmenu-items li.selected');
 						if (currItem) {
 							openMenuItem(currItem, true);
 						}
@@ -348,10 +348,10 @@ let RevealMenu = window.RevealMenu || (function(){
 			if (isOpen()) {
 				return;
 			}
-			document.querySelector('body').classList.add('slide-menu-active');
+			document.querySelector('body').classList.add('rmenu-active');
 			document.querySelector('.reveal').classList.add('has-' + options.effect + '-' + options.side);
-			document.querySelector('.slide-menu').classList.add('active');
-			document.querySelector('.slide-menu-overlay').classList.add('active');
+			document.querySelector('.rmenu').classList.add('active');
+			document.querySelector('.rmenu-overlay').classList.add('active');
 
 			// identify active theme
 			if (options.themes) {
@@ -375,7 +375,7 @@ let RevealMenu = window.RevealMenu || (function(){
 			}
 
 			// set item selections to match active items
-			forAllNodes('.slide-menu-panel li.active', null, function(i) {
+			forAllNodes('.rmenu-panel li.active', null, function(i) {
 				i.classList.add('selected');
 				keepVisible(i);
 			});
@@ -384,10 +384,10 @@ let RevealMenu = window.RevealMenu || (function(){
 		function closeMenu(event, force) {
 			if (event) event.preventDefault();
 			if (!options.sticky || force) {
-				document.querySelector('body').classList.remove('slide-menu-active');
+				document.querySelector('body').classList.remove('rmenu-active');
 				document.querySelector('.reveal').classList.remove('has-' + options.effect + '-' + options.side);
-				document.querySelector('.slide-menu').classList.remove('active');
-				document.querySelector('.slide-menu-overlay').classList.remove('active');
+				document.querySelector('.rmenu').classList.remove('active');
+				document.querySelector('.rmenu-overlay').classList.remove('active');
 				deselectAllMenuItems();
 			}
 		}
@@ -401,7 +401,7 @@ let RevealMenu = window.RevealMenu || (function(){
 		}
 
 		function isOpen() {
-			return document.querySelector('body').classList.contains('slide-menu-active');
+			return document.querySelector('body').classList.contains('rmenu-active');
 		}
 
 		function openPanel(event, ref) {
@@ -410,9 +410,9 @@ let RevealMenu = window.RevealMenu || (function(){
 			if (typeof ref !== "string") {
 				panel = event.currentTarget.getAttribute('data-panel');
 			}
-			document.querySelector('.slide-menu-toolbar > li.active-toolbar-button').classList.remove('active-toolbar-button');
+			document.querySelector('.rmenu-toolbar > li.active-toolbar-button').classList.remove('active-toolbar-button');
 			document.querySelector('li[data-panel="' + panel + '"]').classList.add('active-toolbar-button');
-			document.querySelector('.slide-menu-panel.active-menu-panel').classList.remove('active-menu-panel');
+			document.querySelector('.rmenu-panel.active-menu-panel').classList.remove('active-menu-panel');
 			document.querySelector('div[data-panel="' + panel + '"]').classList.add('active-menu-panel');
 		}
 
@@ -475,7 +475,7 @@ let RevealMenu = window.RevealMenu || (function(){
 
 		function highlightCurrentSlide() {
 			let state = Reveal.getState();
-			forAllNodes('li.slide-menu-item, li.slide-menu-item-vertical', null, function(item) {
+			forAllNodes('li.rmenu-item, li.rmenu-item-vertical', null, function(item) {
 				item.classList.remove('past');
 				item.classList.remove('active');
 				item.classList.remove('future');
@@ -496,7 +496,7 @@ let RevealMenu = window.RevealMenu || (function(){
 
 		function matchRevealStyle() {
 			let revealStyle = window.getComputedStyle(Reveal.getRevealElement());
-			let element = document.querySelector('.slide-menu');
+			let element = document.querySelector('.rmenu');
 			element.style.fontFamily = revealStyle.fontFamily;
 			//XXX could adjust the complete menu style to match the theme, ie colors, etc
 		}
@@ -505,26 +505,26 @@ let RevealMenu = window.RevealMenu || (function(){
 		function init() {
 			if (!initialised) {
 				let parent = document.querySelector('.reveal').parentElement;
-				let top = createDomNode('div', { 'class': 'slide-menu-wrapper'});
+				let top = createDomNode('div', { 'class': 'rmenu-wrapper'});
 				parent.appendChild(top);
-				let panels = createDomNode('nav', { 'class': 'slide-menu slide-menu--' + options.side});
+				let panels = createDomNode('nav', { 'class': 'rmenu rmenu--' + options.side});
 				if (typeof options.width === 'string') {
 					if (['normal', 'wide', 'third', 'half', 'full'].indexOf(options.width) !== -1) {
-						panels.classList.add('slide-menu--' + options.width);
+						panels.classList.add('rmenu--' + options.width);
 					}
 					else {
-						panels.classList.add('slide-menu--custom');
+						panels.classList.add('rmenu--custom');
 						panels.style.width = options.width;
 					}
 				}
 				top.appendChild(panels);
 				matchRevealStyle();
-				let overlay = createDomNode('div', { 'class': 'slide-menu-overlay'});
+				let overlay = createDomNode('div', { 'class': 'rmenu-overlay'});
 				top.appendChild(overlay);
 				overlay.onclick = function() { closeMenu(null, true) };
 
-				let toolbar = createDomNode('ol', {'class': 'slide-menu-toolbar'});
-				document.querySelector('.slide-menu').appendChild(toolbar);
+				let toolbar = createDomNode('ol', {'class': 'rmenu-toolbar'});
+				document.querySelector('.rmenu').appendChild(toolbar);
 
 				function addToolbarButton(title, ref, icon, style, fn, active) {
 					let attrs = {
@@ -542,7 +542,7 @@ let RevealMenu = window.RevealMenu || (function(){
 						button.innerHTML = icon + '</i>';
 					}
 					button.appendChild(createDomNode('br'), button.querySelector('i'));
-					button.appendChild(createDomNode('span', {'class': 'slide-menu-toolbar-label'}, title), button.querySelector('i'));
+					button.appendChild(createDomNode('span', {'class': 'rmenu-toolbar-label'}, title), button.querySelector('i'));
 					button.onclick = fn;
 					toolbar.appendChild(button);
 					return button;
@@ -565,7 +565,7 @@ let RevealMenu = window.RevealMenu || (function(){
 				let button = createDomNode('li', {id: 'close', 'class': 'toolbar-panel-button'});
 				button.appendChild(createDomNode('i', {'class': 'fas fa-times'}));
 				button.appendChild(createDomNode('br'));
-				button.appendChild(createDomNode('span', {'class': 'slide-menu-toolbar-label'}, 'Close'));
+				button.appendChild(createDomNode('span', {'class': 'rmenu-toolbar-label'}, 'Close'));
 				button.onclick = function() { closeMenu(null, true) };
 				toolbar.appendChild(button);
 
@@ -646,10 +646,10 @@ let RevealMenu = window.RevealMenu || (function(){
 								if( typeof v === 'number' && !isNaN( v ) ) value.push( '.', v + 1 );
 						}
 
-						item.appendChild(createDomNode('span', {class: 'slide-menu-item-number'}, value.join('') + '. '));
+						item.appendChild(createDomNode('span', {class: 'rmenu-item-number'}, value.join('') + '. '));
 					}
 
-					item.appendChild(createDomNode('span', {class: 'slide-menu-item-title'}, title));
+					item.appendChild(createDomNode('span', {class: 'rmenu-item-title'}, title));
 
 					return item;
 				}
@@ -658,16 +658,16 @@ let RevealMenu = window.RevealMenu || (function(){
 					if ( !document.querySelector('section[data-markdown]:not([data-markdown-parsed])') ) {
 						let panel = createDomNode('div', {
 							'data-panel': 'Slides',
-							'class': 'slide-menu-panel active-menu-panel'
+							'class': 'rmenu-panel active-menu-panel'
 						});
-						panel.appendChild(createDomNode('ul', {class: "slide-menu-items"}));
+						panel.appendChild(createDomNode('ul', {class: "rmenu-items"}));
 						panels.appendChild(panel);
-						let items = document.querySelector('.slide-menu-panel[data-panel="Slides"] > .slide-menu-items');
+						let items = document.querySelector('.rmenu-panel[data-panel="Slides"] > .rmenu-items');
 						let slideCount = 0;
 						forAllNodes('.slides > section', null, function(section, h) {
 							if (section.querySelector('section')) {
 								forAllNodes('section', section,function(subsection, v) {
-									let type = (v === 0 ? 'slide-menu-item' : 'slide-menu-item-vertical');
+									let type = (v === 0 ? 'rmenu-item' : 'rmenu-item-vertical');
 									let item = generateSlideLinkMenuItem(type, subsection, slideCount, h, v);
 									if (item) {
 										slideCount++;
@@ -675,14 +675,14 @@ let RevealMenu = window.RevealMenu || (function(){
 									}
 								});
 							} else {
-								let item = generateSlideLinkMenuItem('slide-menu-item', section, slideCount, h);
+								let item = generateSlideLinkMenuItem('rmenu-item', section, slideCount, h);
 								if (item) {
 									slideCount++;
 									items.appendChild(item);
 								}
 							}
 						});
-						for(let i of document.querySelectorAll('.slide-menu-item, .slide-menu-item-vertical')) {
+						for(let i of document.querySelectorAll('.rmenu-item, .rmenu-item-vertical')) {
 							i.onclick = clicked;
 						}
 						highlightCurrentSlide();
@@ -722,7 +722,7 @@ let RevealMenu = window.RevealMenu || (function(){
 						oReq.send(null);
 					}
 					function enableCustomLinks(panel) {
-						forAllNodes('ul.slide-menu-items li.slide-menu-item', panel, function(item, i) {
+						forAllNodes('ul.rmenu-items li.rmenu-item', panel, function(item, i) {
 							item.setAttribute('data-item-index', i+1);
 							item.onclick = clicked;
 							item.addEventListener("mouseenter", handleMouseHighlight);
@@ -738,7 +738,7 @@ let RevealMenu = window.RevealMenu || (function(){
 					options.custom.forEach(function(element, index) {
 						let panel = createDomNode('div', {
 							'data-panel': 'Custom' + index,
-							class: 'slide-menu-panel slide-menu-custom-panel'
+							class: 'rmenu-panel rmenu-custom-panel'
 						});
 						if (element.content) {
 							panel.innerHTML = element.content;
@@ -756,15 +756,15 @@ let RevealMenu = window.RevealMenu || (function(){
 				//
 				if (options.themes) {
 					let panel = createDomNode('div', {
-						class: 'slide-menu-panel',
+						class: 'rmenu-panel',
 						'data-panel': 'Themes'
 					});
 					panels.appendChild(panel);
-					let menu = createDomNode('ul', {class: 'slide-menu-items'});
+					let menu = createDomNode('ul', {class: 'rmenu-items'});
 					panel.appendChild(menu);
 					options.themes.forEach(function(t, i) {
 						let item = createDomNode('li', {
-							class: 'slide-menu-item',
+							class: 'rmenu-item',
 							'data-theme': t.theme,
 							'data-item-index': ''+(i+1)
 						 }, t.name);
@@ -778,15 +778,15 @@ let RevealMenu = window.RevealMenu || (function(){
 				//
 				if (options.transitions) {
 					let panel = createDomNode('div', {
-						class: 'slide-menu-panel',
+						class: 'rmenu-panel',
 						'data-panel': 'Transitions'
 					});
 					panels.appendChild(panel);
-					let menu = createDomNode('ul', {class: 'slide-menu-items'});
+					let menu = createDomNode('ul', {class: 'rmenu-items'});
 					panel.appendChild(menu);
 					options.transitions.forEach(function(name, i) {
 						let item = createDomNode('li', {
-							class: 'slide-menu-item',
+							class: 'rmenu-item',
 							'data-transition': name.toLowerCase(),
 							'data-item-index': ''+(i+1)
 						}, name);
@@ -800,7 +800,7 @@ let RevealMenu = window.RevealMenu || (function(){
 				//
 				if (options.openButton) {
 					// add menu button
-					let div = createDomNode('div', {class: 'slide-menu-button'});
+					let div = createDomNode('div', {class: 'rmenu-button'});
 					let link = createDomNode('a', {href: '#'});
 					link.appendChild(createDomNode('i', {class: 'fas fa-bars'}));
 					div.appendChild(link);
@@ -816,7 +816,7 @@ let RevealMenu = window.RevealMenu || (function(){
 				//
 				// Handle mouse overs
 				//
-				for(let item of document.querySelectorAll('.slide-menu-panel .slide-menu-items li')){
+				for(let item of document.querySelectorAll('.rmenu-panel .rmenu-items li')){
 					item.addEventListener("mouseenter", handleMouseHighlight);
 				}
 
