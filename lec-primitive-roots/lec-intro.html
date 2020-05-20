@@ -6,13 +6,20 @@
 
     <title>reveal.js</title>
 
+    <link rel="stylesheet" href="../reveal/dist/reset.css">
+    <link rel="stylesheet" href="../reveal/dist/reveal.css">
+    <link rel="stylesheet" href="../reveal/dist/theme/black.css" id="theme">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="../reveal/plugin/highlight/monokai.css" id="highlight-theme">
+
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
-    <link rel="stylesheet" href="../reveal/css/reveal.css">
-    <link rel="stylesheet" href="../reveal-custom/css/theme/black.css" id="theme">
-<!--    <link rel="stylesheet" href="../reveal/css/theme/beige.css" id="theme">-->
-    <link rel="stylesheet" href="../reveal/lib/css/zenburn.css">
+
     <link rel="stylesheet" href="../reveal-custom/css/extras.css">
 </head>
+
+
 <body>
 <div class="reveal"><div class="slides">
     <section title="Титульный слайд" data-external="sect-title.html"></section>
@@ -23,10 +30,22 @@
     <section title="Первообразные корни" data-external="sect-primitive-roots.html"></section>
 </div></div>
 
-<script src="../reveal/js/reveal.js"></script>
+
+<script src="../reveal/dist/reveal.js"></script>
+<script src="../reveal/plugin/notes/notes.js"></script>
+<script src="../reveal/plugin/highlight/highlight.js"></script>
+
+<script src="../reveal-custom/plugins/external/external.js"></script>
+<script src="../reveal-custom/plugins/menu/menu.js"></script>
+<script src="../reveal-custom/plugins/math-mod/math.js"></script>
+<script src="../reveal-custom/plugins/inking/inking.js"></script>
+<script src="../reveal-custom/plugins/zoom-js-mod/zoom.js"></script>
+
+
 
 <script>
     Reveal.initialize({
+        plugins: [ RevealHighlight, RevealNotes, RevealMenu, RevealMath, RevealInking, RevealZoom ],
         slideNumber: true,
         width: 1200,
         height: 1000,
@@ -86,43 +105,7 @@
         },
         zooming: {
             explicitZoomables: false,
-        },
-        dependencies: [
-            {
-                src: '../reveal-custom/plugins/external/external.js',
-                async: false,
-                condition: function () {
-                    return !!document.querySelector('[data-external],[data-external-replace]');
-                }
-            },
-            {
-                src: '../reveal-custom/plugins/menu/menu.js',
-                async: false
-            },
-            {
-                src: '../reveal-custom/plugins/math-mod/math.js',
-                async: false
-            },
-            {
-                src: '../reveal-custom/plugins/inking/inking.js',
-                async: false
-            },
-            // {
-            //     src: '../reveal-custom/plugins/webcam/webcam.js'
-            // },
-            // {
-            //     src: '../reveal-custom/plugins/highlight-ace/highlight-ace.js',
-            //     condition: function () {
-            //         return !!document.querySelector('pre code');
-            //     }
-            // },
-            {
-                src: '../reveal/plugin/notes/notes.js'
-            },
-            {
-                src: '../reveal-custom/plugins/zoom-js-mod/zoom.js'
-            }
-        ]
+        }
     });
 </script>
 </body>
