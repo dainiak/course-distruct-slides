@@ -198,75 +198,80 @@ let zoom = (function(){
 	}
 
 })();
-(function(){
-	let options = Reveal.getConfig().zooming || {};
-	const EXPLICIT_ZOOMABLES = !!options.explicitZoomables;
-	const ZOOM_KEY = ( options.zoomKey || 'alt' ) + 'Key';
-	const FULLSCREEN_KEY = ( options.fullscreenKey || 'ctrl' ) + 'Key';
 
-	let isEnabled = true;
+const RevealZoom = {
+	id: 'zoom',
+	init: (reveal) => {
+		let options = reveal.getConfig().zooming || {};
+		const EXPLICIT_ZOOMABLES = !!options.explicitZoomables;
+		const ZOOM_KEY = ( options.zoomKey || 'alt' ) + 'Key';
+		const FULLSCREEN_KEY = ( options.fullscreenKey || 'ctrl' ) + 'Key';
 
-	document.querySelector( '.reveal .slides' ).addEventListener( 'mousedown', function( event ) {
-		if( !((event[ ZOOM_KEY ] || event[ FULLSCREEN_KEY ]) && isEnabled) ) {
-			return;
-		}
+		let isEnabled = true;
 
-
-		let zoomPadding = 20;
-		let revealScale = Reveal.getScale();
-
-		let target = event.target;
-		while (target)
-		{
-			if(target.tagName.toLowerCase() == 'section') {
-				target = event.target;
-				break;
-			}
-			if(target.classList.contains('MathJax')){
-				break;
-			}
-			if(target.classList.contains('smallest-zoomable') || target.hasAttribute('data-smallest-zoomable') || target.classList.contains('zoomable')){
-				break;
+		document.querySelector( '.reveal .slides' ).addEventListener( 'mousedown', function( event ) {
+			if( !((event[ ZOOM_KEY ] || event[ FULLSCREEN_KEY ]) && isEnabled) ) {
+				return;
 			}
 
-			target = target.parentNode;
-		}
+			let zoomPadding = 20;
+			let revealScale = reveal.getScale();
 
-		if(EXPLICIT_ZOOMABLES && !target.classList.contains('smallest-zoomable') && !target.hasAttribute('data-smallest-zoomable') && !target.classList.contains('zoomable') && !target.hasAttribute('data-zoomable')){
-			return;
-		}
-
-		if(event[FULLSCREEN_KEY] && document.fullscreenEnabled) {
-			target.addEventListener('mousedown', function(evt){
-				if(evt.target.fullscreenElement !== false && evt[ZOOM_KEY] && evt[FULLSCREEN_KEY]){
-					document.exitFullscreen();
+			let target = event.target;
+			while (target)
+			{
+				if(target.tagName.toLowerCase() == 'section') {
+					target = event.target;
+					break;
 				}
+				if(target.classList.contains('MathJax')){
+					break;
+				}
+				if(target.classList.contains('smallest-zoomable') || target.hasAttribute('data-smallest-zoomable') || target.classList.contains('zoomable')){
+					break;
+				}
+
+				target = target.parentNode;
+			}
+
+			if(EXPLICIT_ZOOMABLES && !target.classList.contains('smallest-zoomable') && !target.hasAttribute('data-smallest-zoomable') && !target.classList.contains('zoomable') && !target.hasAttribute('data-zoomable')){
+				return;
+			}
+
+			if(event[FULLSCREEN_KEY] && document.fullscreenEnabled) {
+				target.addEventListener('mousedown', function(evt){
+					if(evt.target.fullscreenElement !== false && evt[ZOOM_KEY] && evt[FULLSCREEN_KEY]){
+						document.exitFullscreen();
+					}
+				});
+				target.requestFullscreen();
+				return;
+			}
+
+
+			event.preventDefault();
+
+			let bounds = target.getBoundingClientRect();
+
+			zoom.to({
+				x: ( bounds.left * revealScale ) - zoomPadding,
+				y: ( bounds.top * revealScale ) - zoomPadding,
+				width: ( bounds.width * revealScale ) + ( zoomPadding * 2 ),
+				height: ( bounds.height * revealScale ) + ( zoomPadding * 2 ),
+				pan: false
 			});
-			target.requestFullscreen();
-			return;
-		}
+		} );
 
+		reveal.addEventListener('overviewshown', function() { isEnabled = false; });
+		reveal.addEventListener('overviewhidden', function() { isEnabled = true; });
+		reveal.addEventListener('ready', function () {
+			for(let e of document.querySelectorAll(
+				'img,video,span,div,section'
+			)){
+				e.removeAttribute('title')
+			}
+		})
+	}
+};
 
-		event.preventDefault();
-
-		let bounds = target.getBoundingClientRect();
-
-		zoom.to({
-			x: ( bounds.left * revealScale ) - zoomPadding,
-			y: ( bounds.top * revealScale ) - zoomPadding,
-			width: ( bounds.width * revealScale ) + ( zoomPadding * 2 ),
-			height: ( bounds.height * revealScale ) + ( zoomPadding * 2 ),
-			pan: false
-		});
-	} );
-
-	Reveal.addEventListener('overviewshown', function() { isEnabled = false; });
-	Reveal.addEventListener('overviewhidden', function() { isEnabled = true; });
-	Reveal.addEventListener('ready', function () {
-		for(let e of document.querySelectorAll(
-			'img,video,span,div,section'
-		)){
-			e.removeAttribute('title')
-		}
-	})
-})();
+// export default () => RevealZoom;

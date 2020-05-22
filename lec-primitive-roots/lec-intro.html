@@ -36,16 +36,30 @@
 <script src="../reveal/plugin/highlight/highlight.js"></script>
 
 <script src="../reveal-custom/plugins/external/external.js"></script>
+
+<link rel="stylesheet" href="../reveal-custom/plugins/menu/font-awesome/css/all.css">
+<link rel="stylesheet" href="../reveal-custom/plugins/menu/menu.css">
 <script src="../reveal-custom/plugins/menu/menu.js"></script>
+
+
 <script src="../reveal-custom/plugins/math-mod/math.js"></script>
 <script src="../reveal-custom/plugins/inking/inking.js"></script>
 <script src="../reveal-custom/plugins/zoom-js-mod/zoom.js"></script>
-
+<script src="../reveal-custom/plugins/webcam/webcam.js"></script>
 
 
 <script>
     Reveal.initialize({
-        plugins: [ RevealHighlight, RevealNotes, RevealMenu, RevealMath, RevealInking, RevealZoom ],
+        plugins: [
+            RevealExternal,
+            RevealHighlight,
+            RevealNotes,
+            RevealMenu,
+            RevealMath,
+            RevealInking,
+            RevealZoom,
+            // RevealWebcam
+        ],
         slideNumber: true,
         width: 1200,
         height: 1000,
