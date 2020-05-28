@@ -26,7 +26,7 @@ import {
 } from './utils/constants.js'
 
 // The reveal.js version
-export const VERSION = '4.0.0';
+export const VERSION = '4.0.1';
 
 /**
  * reveal.js
@@ -47,7 +47,7 @@ export default function( revealElement, options ) {
 	const Reveal = {};
 
 	// Configuration defaults, can be overridden at initialization time
-	let config,
+	let config = {},
 
 		// Flags if reveal.js is loaded (has dispatched the 'ready' event)
 		ready = false,
@@ -125,8 +125,14 @@ export default function( revealElement, options ) {
 		dom.wrapper = revealElement;
 		dom.slides = revealElement.querySelector( '.slides' );
 
-		// Compose our config object
-		config = { ...defaultConfig, ...options, ...initOptions, ...Util.getQueryHash() };
+		// Compose our config object in order of increasing precedence:
+		// 1. Default reveal.js options
+		// 2. Options provided via Reveal.configure() prior to
+		//    initialization
+		// 3. Options passed to the Reveal constructor
+		// 4. Options passed to Reveal.initialize
+		// 5. Query params
+		config = { ...defaultConfig, ...config, ...options, ...initOptions, ...Util.getQueryHash() };
 
 		setViewport();
 
@@ -148,7 +154,7 @@ export default function( revealElement, options ) {
 
 		// Embedded decks use the reveal element as their viewport
 		if( config.embedded === true ) {
-			dom.viewport = revealElement.closest( '.reveal-viewport' ) || revealElement;
+			dom.viewport = Util.closest( revealElement, '.reveal-viewport' ) || revealElement;
 		}
 		// Full-page decks use the body as their viewport
 		else {
@@ -822,9 +828,9 @@ export default function( revealElement, options ) {
 						dom.slides.style.right = '';
 						transformSlides( { layout: '' } );
 					}
-					// Transform Scaling
-					// Content layout remains the exact same when scaled up.
-					// Side effect is content becoming blurred, especially with
+						// Transform Scaling
+						// Content layout remains the exact same when scaled up.
+						// Side effect is content becoming blurred, especially with
 					// high scale values on ldpi screens.
 					else {
 						dom.slides.style.zoom = '';
@@ -904,7 +910,7 @@ export default function( revealElement, options ) {
 			// Consider the aspect ratio of media elements
 			if( /(img|video)/gi.test( element.nodeName ) ) {
 				const nw = element.naturalWidth || element.videoWidth,
-					  nh = element.naturalHeight || element.videoHeight;
+					nh = element.naturalHeight || element.videoHeight;
 
 				const es = Math.min( width / nw, remainingHeight / nh );
 
@@ -1489,7 +1495,10 @@ export default function( revealElement, options ) {
 
 				let reverse = config.rtl && !isVerticalSlide( element );
 
-				element.classList.remove( 'past', 'present', 'future' );
+				// Avoid .remove() with multiple args for IE11 support
+				element.classList.remove( 'past' );
+				element.classList.remove( 'present' );
+				element.classList.remove( 'future' );
 
 				// http://www.w3.org/html/wg/drafts/html/master/editing.html#the-hidden-attribute
 				element.setAttribute( 'hidden', '' );
@@ -2064,21 +2073,21 @@ export default function( revealElement, options ) {
 			}
 			else {
 				autoSlide = config.autoSlide;
-			}
 
-			// If there are media elements with data-autoplay,
-			// automatically set the autoSlide duration to the
-			// length of that media. Not applicable if the slide
-			// is divided up into fragments.
-			// playbackRate is accounted for in the duration.
-			if( currentSlide.querySelectorAll( '.fragment' ).length === 0 ) {
-				Util.queryAll( currentSlide, 'video, audio' ).forEach( el => {
-					if( el.hasAttribute( 'data-autoplay' ) ) {
-						if( autoSlide && (el.duration * 1000 / el.playbackRate ) > autoSlide ) {
-							autoSlide = ( el.duration * 1000 / el.playbackRate ) + 1000;
+				// If there are media elements with data-autoplay,
+				// automatically set the autoSlide duration to the
+				// length of that media. Not applicable if the slide
+				// is divided up into fragments.
+				// playbackRate is accounted for in the duration.
+				if( currentSlide.querySelectorAll( '.fragment' ).length === 0 ) {
+					Util.queryAll( currentSlide, 'video, audio' ).forEach( el => {
+						if( el.hasAttribute( 'data-autoplay' ) ) {
+							if( autoSlide && (el.duration * 1000 / el.playbackRate ) > autoSlide ) {
+								autoSlide = ( el.duration * 1000 / el.playbackRate ) + 1000;
+							}
 						}
-					}
-				} );
+					} );
+				}
 			}
 
 			// Cue the next auto-slide if:
