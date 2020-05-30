@@ -725,13 +725,13 @@ const RevealInking = {
                 }
 
                 if(event.key === options.hotkeys.draw) {
-                    if(document.querySelector('.canvas-container').style.display === 'none')
+                    if(!isCanvasVisible())
                         return;
 
                     enterDrawingMode();
                 }
                 if(event.key === options.hotkeys.erase){
-                    if(document.querySelector('.canvas-container').style.display === 'none')
+                    if(!isCanvasVisible())
                         return;
 
                     enterDeletionMode();
@@ -752,7 +752,7 @@ const RevealInking = {
                 if(
                     options.math.enabled
                     && evt.key === options.hotkeys.insertMath
-                    && document.querySelector('.canvas-container').style.display !== 'none'
+                    && isCanvasVisible()
                 ) {
                     createNewFormulaWithQuery();
                 }
