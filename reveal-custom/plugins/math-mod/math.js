@@ -6,7 +6,7 @@ const RevealMath = {
             svgMathScale: options.svgMathScale || 0.0015,
             svgMathFixedScale: !!(options.svgMathFixedScale),
             svgMathEscapeClipping: !!(options.svgMathEscapeClipping),
-            mathjaxUrl: options.mathjaxUrl || 'https://cdn.jsdelivr.net/npm/mathjax@3.0.5/es5/tex-svg-full.js',
+            mathjaxUrl: options.mathjaxUrl || 'https://cdn.jsdelivr.net/npm/mathjax@3.1.2/es5/tex-svg-full.js',
             resetFragmentIndicesAfterTypeset: options.resetFragmentIndicesAfterTypeset !== false,
             fragmentIndexCSS: options.fragmentIndexCSS !== false,
             macros: options.macros || {},

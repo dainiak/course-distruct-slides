@@ -107,11 +107,11 @@ const RevealInking = {
                     + '.ink-serializecanvas:before {content: "\u2B07"} ',
                 type: 'text/css'
             }, {
-                url: 'https://cdn.jsdelivr.net/npm/fabric@4.0.0-beta.11/dist/fabric.min.js',
+                url: 'https://cdn.jsdelivr.net/npm/fabric@4.2.0/dist/fabric.min.js',
                 condition: !window.fabric
             },
             {
-                url: 'https://cdn.jsdelivr.net/npm/mathjax@3.0.5/es5/tex-svg-full.js',
+                url: 'https://cdn.jsdelivr.net/npm/mathjax@3.1.2/es5/tex-svg-full.js',
                 condition: options.math.enabled && !reveal.getConfig().math && (!window.MathJax || !window.MathJax.version)
             }
         ];
