@@ -13,7 +13,7 @@ const RevealMath = {
             svgMathEnabled: !!(options.svgMathEnabled),
         };
 
-        window.MathJax = {
+        window.MathJax = window.MathJax || {
             options: {
                 renderActions: {
                     addMenu: [0, '', '']
@@ -31,17 +31,6 @@ const RevealMath = {
             startup: {
                 typeset: false,
                 ready: () => {
-                    // Hotfix for glitch with MathJax 3.0.5 SVG rendering
-                    if (MathJax.version === '3.0.5') {
-                        const SVGWrapper = MathJax._.output.svg.Wrapper.SVGWrapper;
-                        const CommonWrapper = SVGWrapper.prototype.__proto__;
-                        SVGWrapper.prototype.unicodeChars = function (text, variant) {
-                            if (!variant){
-                                variant = this.variant || 'normal';
-                            }
-                            return CommonWrapper.unicodeChars.call(this, text, variant);
-                        }
-                    }
                     MathJax.startup.defaultReady();
                     reveal.typesetMath();
                 }
@@ -212,6 +201,7 @@ const RevealMath = {
                 typesetMathInSVG();
             }
             MathJax.typeset();
+
             for(let fragment of document.querySelectorAll( 'mjx-assistive-mml .fragment' ))
                 fragment.classList.remove('fragment')
 
@@ -235,10 +225,16 @@ const RevealMath = {
 
         reveal.typesetMath = typesetMath;
 
-        let mathJaxScript = document.createElement('script');
-        mathJaxScript.src = options.mathjaxUrl;
-        mathJaxScript.async = true;
-        document.head.appendChild(mathJaxScript);
+        if(!document.querySelector('script[src="' + options.mathjaxUrl + '"]')){
+            let mathJaxScript = document.createElement('script');
+            mathJaxScript.src = options.mathjaxUrl;
+            // mathJaxScript.async = true;
+            document.head.appendChild(mathJaxScript);
+        }
+
+        reveal.on('ready', function (){
+            setTimeout(typesetMath, 500);
+        });
 
         return true;
     }
