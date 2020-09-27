@@ -32,7 +32,6 @@ const RevealMath = {
                 typeset: false,
                 ready: () => {
                     MathJax.startup.defaultReady();
-                    reveal.typesetMath();
                 }
             },
             svg: {
@@ -196,34 +195,30 @@ const RevealMath = {
         }
 
 
-        function typesetMath() {
+        reveal.typesetMath = () => {
             if(options.svgMathEnabled) {
                 typesetMathInSVG();
             }
-            MathJax.typeset();
+            MathJax.typeset(reveal.getViewportElement());
 
             for(let fragment of document.querySelectorAll( 'mjx-assistive-mml .fragment' ))
                 fragment.classList.remove('fragment')
 
             if(options.resetFragmentIndicesAfterTypeset || options.fragmentIndexCSS) {
                 for(let slide of reveal.getSlides()){
-                    for(let fragment of slide.querySelectorAll('.fragment'))
+                    for (let fragment of slide.querySelectorAll('.fragment'))
                         if (fragment.hasAttribute('data-fragment-index'))
                             fragment.removeAttribute('data-fragment-index');
 
                     for(let i = 0; i < 15; ++i) {
                         let fragments = slide.querySelectorAll('.fragment.fragidx-' + i.toString());
-                        if(fragments.length === 0 && i >= 1)
-                            break;
                         for(let fragment of fragments)
                             fragment.setAttribute('data-fragment-index', i);
                     }
                 }
             }
             reveal.layout();
-        }
-
-        reveal.typesetMath = typesetMath;
+        };
 
         if(!document.querySelector('script[src="' + options.mathjaxUrl + '"]')){
             let mathJaxScript = document.createElement('script');
@@ -232,8 +227,8 @@ const RevealMath = {
             document.head.appendChild(mathJaxScript);
         }
 
-        reveal.on('ready', function (){
-            setTimeout(typesetMath, 500);
+        window.addEventListener('load', function (){
+            reveal.typesetMath();
         });
 
         return true;
