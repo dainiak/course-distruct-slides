@@ -11,19 +11,7 @@ const RevealKatex = {
 			macros: options.macros || {}
 		};
 
-		macros = {
-			"\\bbF": "{\\mathbb{F}}",
-			"\\Fstar": "{\\mathbb{F}^*}",
-			"\\divides": "{\\mathbin{\\:\\!\\vert\\:\\!}}",
-			"\\notdivides": "{\\mathbin{\\:\\!\u2224\\:\\!}}",
-			"\\ord": "\\operatorname{ord}",
-			"\\roots": "\\operatorname{roots}",
-			"\\euler": "\\varphi",
-			"\\card": "\\lvert #1 \\rvert",
-			"\\GCD": "\\mathrm{GCD}",
-			"\\any": "\u25A3",
-			"\\eqmod": "\\overset{#1}{=}",
-			"\\neqmod": "\\overset{\\scriptsize{#1}}{\\neq}",
+		let macros = {
 			"\\bbA": "{\\mathbb{A}}",
 			"\\bbB": "{\\mathbb{B}}",
 			"\\bbF": "{\\mathbb{F}}",
@@ -72,7 +60,14 @@ const RevealKatex = {
 			"\\red": "\\htmlClass{red}{#1}"
 		};
 
-		Object.assign(macros, options.macros);
+		for(let macroName in options.macros){
+			let macroDefinition = options.macros[macroName]
+			if(macroDefinition instanceof Array)
+				macroDefinition = macroDefinition[0];
+			if(!macroName.startsWith('\\'))
+				macroName = '\\' + macroName
+			macros[macroName] = macroDefinition;
+		}
 
 		let scriptsToLoad = [
 			{
