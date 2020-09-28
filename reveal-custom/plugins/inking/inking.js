@@ -354,6 +354,7 @@ const RevealInking = {
             canvas.targetFindTolerance = 3;
         }
 
+
         function createSpotlight(){
             if(!options.spotlight.enabled) {
                 return;
@@ -412,6 +413,7 @@ const RevealInking = {
                 createSpotlight()
         }
 
+
         function isCanvasVisible(){
             let cContainer = revealViewport.querySelector('.canvas-container');
             return !(cContainer.style.display === 'none');
@@ -435,15 +437,7 @@ const RevealInking = {
             }
         }
 
-        function toggleDrawingMode() {
-            if (canvas.isDrawingMode) {
-                leaveDrawingMode();
-            }
-            else {
-                leaveDeletionMode();
-                enterDrawingMode();
-            }
-        }
+
         function enterDrawingMode(){
             canvas.freeDrawingBrush.color = currentInkColor;
             canvas.isDrawingMode = true;
@@ -455,6 +449,16 @@ const RevealInking = {
             revealViewport.querySelector('.ink-pencil').style.textShadow = '';
             toggleColorChoosers(false);
         }
+        function toggleDrawingMode() {
+            if (canvas.isDrawingMode) {
+                leaveDrawingMode();
+            }
+            else {
+                leaveDeletionMode();
+                enterDrawingMode();
+            }
+        }
+
 
         function enterDeletionMode(){
             leaveDrawingMode();
@@ -466,7 +470,6 @@ const RevealInking = {
                 revealViewport.querySelector('.ink-erase').style.textShadow = options.controls.shadow;
             }
         }
-
         function leaveDeletionMode(){
             if (isInEraseMode) {
                 isInEraseMode = false;
@@ -724,9 +727,9 @@ const RevealInking = {
                 }
             });
 
-            canvas.on('mouse:move', function (event) {
-                mousePosition.x = event.e.layerX;
-                mousePosition.y = event.e.layerY;
+            canvas.on('mouse:move', function (eventInfo) {
+                mousePosition.x = eventInfo.e.layerX;
+                mousePosition.y = eventInfo.e.layerY;
                 if (spotlight) {
                     spotlight.set({
                         left: mousePosition.x - spotlight.radius,
@@ -736,15 +739,15 @@ const RevealInking = {
                 }
             });
 
-            canvas.on('mouse:over', function (event) {
+            canvas.on('mouse:over', function (eventInfo) {
                 if (isInEraseMode && isMouseLeftButtonDown) {
-                    canvas.remove(event.target);
+                    canvas.remove(eventInfo.target);
                 }
             });
 
-            canvas.on('object:added', function (event) {
-                if(!isMathImage(event.target)){
-                    setCanvasObjectDefaults(event.target)
+            canvas.on('object:added', function (eventInfo) {
+                if(!isMathImage(eventInfo.target)){
+                    setCanvasObjectDefaults(eventInfo.target)
                 }
             });
 
@@ -1104,7 +1107,7 @@ const RevealInking = {
                 params.type = (params.url && params.url.match(/\.css[^.]*$/)) ? 'text/css' : 'text/javascript';
             }
 
-            let script = null;
+            let script;
 
             if( params.type === 'text/css' ){
                 if( params.content ){

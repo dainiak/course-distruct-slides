@@ -199,7 +199,7 @@ const RevealMath = {
             if(options.svgMathEnabled) {
                 typesetMathInSVG();
             }
-            MathJax.typeset(reveal.getViewportElement());
+            MathJax.typeset([reveal.getViewportElement()]);
 
             for(let fragment of document.querySelectorAll( 'mjx-assistive-mml .fragment' ))
                 fragment.classList.remove('fragment')
