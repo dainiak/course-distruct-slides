@@ -6,7 +6,7 @@ const RevealMath = {
             svgMathScale: options.svgMathScale || 0.0015,
             svgMathFixedScale: !!(options.svgMathFixedScale),
             svgMathEscapeClipping: !!(options.svgMathEscapeClipping),
-            mathjaxUrl: options.mathjaxUrl || 'https://cdn.jsdelivr.net/npm/mathjax@3.0.5/es5/tex-svg-full.js',
+            mathjaxUrl: options.mathjaxUrl || 'https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-svg-full.js',
             resetFragmentIndicesAfterTypeset: options.resetFragmentIndicesAfterTypeset !== false,
             fragmentIndexCSS: options.fragmentIndexCSS !== false,
             macros: options.macros || {},
@@ -31,17 +31,6 @@ const RevealMath = {
             startup: {
                 typeset: false,
                 ready: () => {
-                    // Hotfix for glitch with MathJax 3.0.5 SVG rendering
-                    if (MathJax.version === '3.0.5') {
-                        const SVGWrapper = MathJax._.output.svg.Wrapper.SVGWrapper;
-                        const CommonWrapper = SVGWrapper.prototype.__proto__;
-                        SVGWrapper.prototype.unicodeChars = function (text, variant) {
-                            if (!variant){
-                                variant = this.variant || 'normal';
-                            }
-                            return CommonWrapper.unicodeChars.call(this, text, variant);
-                        }
-                    }
                     MathJax.startup.defaultReady();
                     reveal.typesetMath();
                 }

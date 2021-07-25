@@ -31,6 +31,7 @@
 </div></div>
 
 
+
 <script src="../reveal/dist/reveal.js"></script>
 <script src="../reveal/plugin/notes/notes.js"></script>
 <script src="../reveal/plugin/highlight/highlight.js"></script>
@@ -53,7 +54,7 @@
         plugins: [
             RevealExternal,
             RevealHighlight,
-            RevealNotes,
+            // RevealNotes,
             RevealMenu,
             RevealMath,
             RevealInking,
@@ -86,10 +87,10 @@
             svgMathEnabled: true,
             macros: {
                 Fstar: "{\\mathbb{F}^*}",
-                divides: "{\\mathbin{\\:\\!\\vert\\:\\!}}",
-                notdivides: "{\\mathbin{\\:\\!\u2224\\:\\!}}",
+                divides: "{\\mathrel{\\vert}}",
+                notdivides: "{\\mathrel{\\,\u2224\\,}}",
                 ord: "\\operatorname{ord}",
-                roots: "\\operatorname{roots}",
+                roots: "\\operatorname{rootKs}",
                 euler: "\\varphi",
                 card: ["\\lvert #1 \\rvert", 1],
                 GCD: "\\mathrm{GCD}",
@@ -122,5 +123,9 @@
         }
     });
 </script>
+
+<!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">-->
+<!--<script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>-->
+<!--<script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {trust: 'true'});"></script>-->
 </body>
 </html>

@@ -1,5 +1,8 @@
-import { queryAll, extend, createStyleSheet } from '../utils/util.js'
+import { queryAll, extend, createStyleSheet, matches, closest } from '../utils/util.js'
 import { FRAGMENT_STYLE_REGEX } from '../utils/constants.js'
+
+// Counter used to generate unique IDs for auto-animated elements
+let autoAnimateCounter = 0;
 
 /**
  * Automatically animates matching elements across
@@ -10,9 +13,6 @@ export default class AutoAnimate {
 	constructor( Reveal ) {
 
 		this.Reveal = Reveal;
-
-		// Counter used to generate unique IDs for auto-animated elements
-		this.autoAnimateCounter = 0;
 
 	}
 
@@ -27,8 +27,16 @@ export default class AutoAnimate {
 		// Clean up after prior animations
 		this.reset();
 
-		// Ensure that both slides are auto-animate targets
-		if( fromSlide.hasAttribute( 'data-auto-animate' ) && toSlide.hasAttribute( 'data-auto-animate' ) ) {
+		let allSlides = this.Reveal.getSlides();
+		let toSlideIndex = allSlides.indexOf( toSlide );
+		let fromSlideIndex = allSlides.indexOf( fromSlide );
+
+		// Ensure that both slides are auto-animate targets with the same data-auto-animate-id value
+		// (including null if absent on both) and that data-auto-animate-restart isn't set on the
+		// physically latter slide (independent of slide direction)
+		if( fromSlide.hasAttribute( 'data-auto-animate' ) && toSlide.hasAttribute( 'data-auto-animate' )
+				&& fromSlide.getAttribute( 'data-auto-animate-id' ) === toSlide.getAttribute( 'data-auto-animate-id' ) 
+				&& !( toSlideIndex > fromSlideIndex ? toSlide : fromSlide ).hasAttribute( 'data-auto-animate-restart' ) ) {
 
 			// Create a new auto-animate sheet
 			this.autoAnimateStyleSheet = this.autoAnimateStyleSheet || createStyleSheet();
@@ -40,12 +48,11 @@ export default class AutoAnimate {
 			toSlide.dataset.autoAnimate = 'pending';
 
 			// Flag the navigation direction, needed for fragment buildup
-			let allSlides = this.Reveal.getSlides();
-			animationOptions.slideDirection = allSlides.indexOf( toSlide ) > allSlides.indexOf( fromSlide ) ? 'forward' : 'backward';
+			animationOptions.slideDirection = toSlideIndex > fromSlideIndex ? 'forward' : 'backward';
 
 			// Inject our auto-animate styles for this transition
 			let css = this.getAutoAnimatableElements( fromSlide, toSlide ).map( elements => {
-				return this.autoAnimateElements( elements.from, elements.to, elements.options || {}, animationOptions, this.autoAnimateCounter++ );
+				return this.autoAnimateElements( elements.from, elements.to, elements.options || {}, animationOptions, autoAnimateCounter++ );
 			} );
 
 			// Animate unmatched elements, if enabled
@@ -63,7 +70,7 @@ export default class AutoAnimate {
 					// If there is a duration or delay set specifically for this
 					// element our unmatched elements should adhere to those
 					if( unmatchedOptions.duration !== animationOptions.duration || unmatchedOptions.delay !== animationOptions.delay ) {
-						id = 'unmatched-' + this.autoAnimateCounter++;
+						id = 'unmatched-' + autoAnimateCounter++;
 						css.push( `[data-auto-animate="running"] [data-auto-animate-target="${id}"] { transition: opacity ${unmatchedOptions.duration}s ease ${unmatchedOptions.delay}s; }` );
 					}
 
@@ -299,8 +306,8 @@ export default class AutoAnimate {
 		options = extend( options, inheritedOptions );
 
 		// Inherit options from parent elements
-		if( element.closest && element.parentNode ) {
-			let autoAnimatedParent = element.parentNode.closest( '[data-auto-animate-target]' );
+		if( element.parentNode ) {
+			let autoAnimatedParent = closest( element.parentNode, '[data-auto-animate-target]' );
 			if( autoAnimatedParent ) {
 				options = this.getAutoAnimateOptions( autoAnimatedParent, options );
 			}
@@ -461,13 +468,13 @@ export default class AutoAnimate {
 
 		pairs.forEach( pair => {
 
-			// Disable scale transformations on text nodes, we transiition
+			// Disable scale transformations on text nodes, we transition
 			// each individual text property instead
-			if( pair.from.matches( textNodes ) ) {
+			if( matches( pair.from, textNodes ) ) {
 				pair.options = { scale: false };
 			}
 			// Animate individual lines of code
-			else if( pair.from.matches( codeNodes ) ) {
+			else if( matches( pair.from, codeNodes ) ) {
 
 				// Transition the code block's width and height instead of scaling
 				// to prevent its content from being squished

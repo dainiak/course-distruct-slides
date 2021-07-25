@@ -9,8 +9,8 @@ let RevealHighlight = (function() {
 	let options = Reveal.getConfig().highlighting || {};
 	let ACE_DEFAULT_THEME = options.theme || 'twilight';
 	let ACE_DEFAULT_LANGUAGE = options.language || 'python';
-	let ACE_URL = options.aceMainUrl || 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.8/ace.js';
-	let ACE_HIGHLIGHT_URL = options.aceStaticHighlighterUrl || 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.8/ext-static_highlight.js';
+	let ACE_URL = options.aceMainUrl || 'https://cdn.jsdelivr.net/npm/ace-builds@1.4.12/src-min/ace.js';
+	let ACE_HIGHLIGHT_URL = options.aceStaticHighlighterUrl || 'https://cdn.jsdelivr.net/npm/ace-builds@1.4.12/src-min/ext-static_highlight.js';
 	let EDITOR_IN_PLACE_BY_DEFAULT = options.editorInPlace !== false;
 	let CLOSE_ACE_ON_BLUR_BY_DEFAULT = options.closeEditorOnBlur;
 	let MOUSECLICK_MODIFIER = options.mouseclickModifierKey;
