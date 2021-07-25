@@ -209,7 +209,7 @@ const RevealZoom = {
 
 		let isEnabled = true;
 
-		document.querySelector( '.reveal .slides' ).addEventListener( 'mousedown', function( event ) {
+		reveal.getViewportElement().addEventListener( 'mousedown', function( event ) {
 			if( !((event[ ZOOM_KEY ] || event[ FULLSCREEN_KEY ]) && isEnabled) ) {
 				return;
 			}

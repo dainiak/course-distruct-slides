@@ -9,13 +9,17 @@
 const RevealWebcam = {
     id: 'webcam',
     init: (reveal) => {
+        let revealViewport = reveal.getViewportElement();
+
         let options = reveal.getConfig().webcam || {};
-        let FULLSCREEN_VIDEO_HORIZONTAL_PADDING = typeof options.fullscreen_horizontal_padding == 'number' ? options.fullscreen_horizontal_padding : 20;
-        let FULLSCREEN_VIDEO_VERTICAL_PADDING = typeof options.fullscreen_vertical_padding == 'number' ? options.fullscreen_vertical_padding : 20;
-        let FULLSCREEN_VIDEO_OPACITY = options.fullscreen_opacity || 1.0;
-        let SHRINK_ON_OVERVIEW = options.shrink_on_overview !== false;
-        let KEY_TOGGLE = options.keyToggle || 'c';
-        let KEY_FULLSCREEN = options.keyFullscreen || 'C';
+        if(typeof options.fullscreenHorizontalPadding !== 'number')
+            options.fullscreenHorizontalPadding = 20;
+        if(typeof options.fullscreenVerticalPadding !== 'number')
+            options.fullscreenVerticalPadding = 20;
+        options.fullscreenOpacity = options.fullscreenOpacity || 1.0;
+        options.shrinkOnOverview = options.shrinkOnOverview !== false;
+        options.keyToggle = options.keyToggle || 'c';
+        options.keyFullscreen = options.keyFullscreen || 'C';
 
         let currentlyFullscreen = false;
         let currentlyHidden = false;
@@ -26,11 +30,11 @@ const RevealWebcam = {
         video.style.left = '20px';
         video.style.top = '20px';
         video.style.height = '100px';
-        video.style.position = 'fixed';
+        video.style.position = 'absolute';
         video.style.zIndex = '100';
         video.style.transition = '0.5s ease';
         video.style.opacity = '0.3';
-        document.body.appendChild(video);
+        reveal.getViewportElement().appendChild(video);
 
 
         function shrinkWebcamVideo(videoElement) {
@@ -51,8 +55,8 @@ const RevealWebcam = {
         }
 
         function expandWebcamVideo(videoElement) {
-            let viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-            let viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+            let viewportWidth = revealViewport.clientWidth;
+            let viewportHeight = revealViewport.clientHeight;
 
             let videoHeight = videoElement.videoHeight;
             let videoWidth = videoElement.videoWidth;
@@ -62,27 +66,27 @@ const RevealWebcam = {
                 videoWidth = parseInt(videoElement.style.width);
             }
 
-            let hRatio = (videoHeight + 2 * FULLSCREEN_VIDEO_VERTICAL_PADDING) / viewportHeight;
-            let wRatio = (videoWidth + 2 * FULLSCREEN_VIDEO_HORIZONTAL_PADDING) / viewportWidth;
+            let wRatio = (videoWidth + 2 * options.fullscreenHorizontalPadding) / viewportWidth;
+            let hRatio = (videoHeight + 2 * options.fullscreenVerticalPadding) / viewportHeight;
 
             if (!currentlyHidden) {
                 if (!videoElement.hasAttribute('data-webcam-old-opacity')) {
                     videoElement.setAttribute('data-webcam-old-opacity', videoElement.style.opacity);
                 }
-                videoElement.style.opacity = FULLSCREEN_VIDEO_OPACITY;
+                videoElement.style.opacity = options.fullscreenOpacity;
             }
 
             let newVideoWidth, newVideoHeight, horizontalPadding, verticalPadding;
             if (wRatio > hRatio) {
-                newVideoWidth = Math.round(viewportWidth - 2 * FULLSCREEN_VIDEO_HORIZONTAL_PADDING);
+                newVideoWidth = Math.round(viewportWidth - 2 * options.fullscreenHorizontalPadding);
                 newVideoHeight = Math.round(newVideoWidth * videoHeight / videoWidth);
-                horizontalPadding = FULLSCREEN_VIDEO_HORIZONTAL_PADDING;
+                horizontalPadding = options.fullscreenHorizontalPadding;
                 verticalPadding = Math.round(0.5 * (viewportHeight - newVideoHeight));
             } else {
-                newVideoHeight = Math.round(viewportHeight - 2 * FULLSCREEN_VIDEO_VERTICAL_PADDING);
+                newVideoHeight = Math.round(viewportHeight - 2 * options.fullscreenVerticalPadding);
                 newVideoWidth = Math.round(newVideoHeight * videoWidth / videoHeight);
                 horizontalPadding = Math.round(0.5 * (viewportWidth - newVideoWidth));
-                verticalPadding = FULLSCREEN_VIDEO_VERTICAL_PADDING;
+                verticalPadding = options.fullscreenVerticalPadding;
             }
 
             if (videoElement.style.height) {
@@ -109,26 +113,26 @@ const RevealWebcam = {
             }
         }
 
-        reveal.addEventListener('ready', function (event) {
+        reveal.addEventListener('ready', function () {
             if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
                 console.warn("Couldn't retrieve webcam video: feature unsupported by your browser");
                 return;
             }
             navigator.mediaDevices.getUserMedia({video: true}).then(function (localMediaStream) {
-                let webcamContainers = document.querySelectorAll('video.webcam');
+                let webcamContainers = revealViewport.querySelectorAll('video.webcam');
                 for (let i = 0; i < webcamContainers.length; ++i) {
                     webcamContainers[i].srcObject = localMediaStream;
-                    webcamContainers[i].setAttribute('autoplay', true);
-                    webcamContainers[i].setAttribute('data-autoplay', true);
+                    webcamContainers[i].setAttribute('autoplay', 'true');
+                    webcamContainers[i].setAttribute('data-autoplay', 'true');
                 }
 
                 //Create permanent webcam
-                let permanentCam = document.querySelector('video.webcam.permanent');
+                let permanentCam = revealViewport.querySelector('video.webcam.permanent');
                 if (permanentCam) {
                     permanentCam.srcObject = localMediaStream;
                     permanentCam.setAttribute('autoplay', 'true');
-                    if (SHRINK_ON_OVERVIEW) {
-                        reveal.addEventListener('overviewshown', function (event) {
+                    if (options.shrinkOnOverview) {
+                        reveal.addEventListener('overviewshown', function () {
                             if (currentlyFullscreen && !currentlyHidden) {
                                 shrinkWebcamVideo(permanentCam);
                                 currentlyFullscreen = false;
@@ -136,14 +140,21 @@ const RevealWebcam = {
                         });
                     }
 
-                    window.addEventListener('keydown', function (event) {
+                    document.addEventListener('keydown', function (event) {
                         if (document.querySelector(':focus') !== null || event.altKey || event.ctrlKey || event.metaKey)
                             return;
 
-                        if (event.key === KEY_TOGGLE || event.key === KEY_FULLSCREEN) {
+                        let config = reveal.getConfig();
+                        if(config.keyboardCondition === "focused" && ! reveal.isFocused())
+                            return true;
+                        if(config.keyboardCondition === 'function' && config.keyboardCondition(event) === false ) {
+                            return true;
+                        }
+
+                        if (event.key === options.keyToggle || event.key === options.keyFullscreen) {
                             event.preventDefault();
 
-                            if (event.key === KEY_FULLSCREEN) {
+                            if (event.key === options.keyFullscreen) {
                                 if (currentlyFullscreen) {
                                     shrinkWebcamVideo(permanentCam);
                                     currentlyFullscreen = false;
@@ -157,11 +168,11 @@ const RevealWebcam = {
                                         permanentCam.setAttribute('data-webcam-old-opacity', permanentCam.style.opacity);
                                     }
 
-                                    permanentCam.style.opacity = 0;
+                                    permanentCam.style.opacity = '0';
                                     currentlyHidden = true;
                                 } else {
                                     if (currentlyFullscreen)
-                                        permanentCam.style.opacity = FULLSCREEN_VIDEO_OPACITY;
+                                        permanentCam.style.opacity = options.fullscreenOpacity;
                                     else
                                         permanentCam.style.opacity = permanentCam.getAttribute('data-webcam-old-opacity');
 

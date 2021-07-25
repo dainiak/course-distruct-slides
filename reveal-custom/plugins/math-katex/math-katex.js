@@ -1,531 +1,214 @@
-/* global Reveal, katex */
+const RevealKatex = {
+	id: 'math',
+	init: (reveal) => {
+		let options = reveal.getConfig().math || {};
+		options = {
+			katexUrl: options.katexUrl || 'https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js',
+			autorenderUrl: options.autorenderUrl || 'https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js',
+			katexCssUrl: options.katexCssUrl || 'https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css',
+			resetFragmentIndicesAfterTypeset: options.resetFragmentIndicesAfterTypeset !== false,
+			fragmentIndexCSS: options.fragmentIndexCSS !== false,
+			macros: options.macros || {}
+		};
 
-/**
- * A plugin that renders mathematical formulas inside reveal.js slides using
- * [KaTeX](https://github.com/Khan/KaTeX]).
- *
- * Calls `katex.renderToString` on DOM elements and regex matches and does some
- * error handling.
- *
- *
- * (Supports loading KaTeX from the web as a fallback solution if it is not
- * found locally. This is currently not needed, as the build includes KateX.)
- *
- * @author Johannes Schmitz
- */
-window.RevealMath = window.RevealMath || (function() {
-	'use strict';
+		let macros = {
+			"\\bbA": "{\\mathbb{A}}",
+			"\\bbB": "{\\mathbb{B}}",
+			"\\bbF": "{\\mathbb{F}}",
+			"\\bbN": "{\\mathbb{N}}",
+			"\\bbP": "{\\mathbb{P}}",
+			"\\bbQ": "{\\mathbb{Q}}",
+			"\\bbR": "{\\mathbb{R}}",
+			"\\bbZ": "{\\mathbb{Z}}",
+			"\\calA": "{\\mathcal{A}}",
+			"\\calB": "{\\mathcal{B}}",
+			"\\calC": "{\\mathcal{C}}",
+			"\\calD": "{\\mathcal{D}}",
+			"\\calF": "{\\mathcal{F}}",
+			"\\calG": "{\\mathcal{G}}",
+			"\\calI": "{\\mathcal{I}}",
+			"\\calM": "{\\mathcal{M}}",
+			"\\calN": "{\\mathcal{N}}",
+			"\\calO": "{\\mathcal{O}}",
+			"\\calR": "{\\mathcal{R}}",
+			"\\calS": "{\\mathcal{S}}",
+			"\\bfA": "{\\mathbf{A}}",
+			"\\bfa": "{\\mathbf{a}}",
+			"\\bfb": "{\\mathbf{b}}",
+			"\\bfc": "{\\mathbf{c}}",
+			"\\bfe": "{\\mathbf{e}}",
+			"\\bfw": "{\\mathbf{w}}",
+			"\\bfx": "{\\mathbf{x}}",
+			"\\bfy": "{\\mathbf{y}}",
+			"\\bfz": "{\\mathbf{z}}",
+			"\\floor": "{\\left\\lfloor #1 \\right\\rfloor}",
+			"\\ceil": "{\\left\\lceil #1 \\right\\rceil}",
+			"\\le": "\\leqslant",
+			"\\ge": "\\geqslant",
+			"\\hat": "\\widehat",
+			"\\emptyset": "\\varnothing",
+			"\\epsilon": "\\varepsilon",
+			"\\fragidx": "\\htmlClass{fragment fragidx-#1}{#2}",
+			"\\sfragidx": "\\htmlClass{fragment fade-in-then-semi-out fragidx-#1}{#2}",
+			"\\vfragidx": "\\rlap{\\class{fragment fade-in-then-out fragidx-#1}{#2}}",
+			"\\underbracket": "\\mathop{\\underset{\\mmlToken{mo}{⎵}}{#2}}\\limits_{#1}",
+			"\\next": "\\htmlClass{fragment}{#1}",
+			"\\step": "\\htmlClass{fragment fade-in-then-semi-out}{#1}",
+			"\\vstep": "\\rlap{\\htmlClass{fragment fade-in-then-out}{#1}}",
+			"\\zoomable": "\\htmlClass{zoomable}{#1}",
+			"\\green": "\\htmlClass{green}{#1}",
+			"\\red": "\\htmlClass{red}{#1}"
+		};
 
-	// --- Options and defaults ------------------------------------------------
+		for(let macroName in options.macros){
+			let macroDefinition = options.macros[macroName]
+			if(macroDefinition instanceof Array)
+				macroDefinition = macroDefinition[0];
+			if(!macroName.startsWith('\\'))
+				macroName = '\\' + macroName
+			macros[macroName] = macroDefinition;
+		}
 
-	var options = Reveal.getConfig().math || {};
+		let scriptsToLoad = [
+			{
+				url:
+				options.katexCssUrl,
+				condition:
+					!window.katex
+					&& !document.querySelector('script[src="' + options.katexUrl + '"]')
+			}, {
+				url:
+				options.katexUrl,
+				condition:
+					!window.katex
+					&& !document.querySelector('script[src="' + options.katexUrl + '"]')
+			},{
+				url:
+				options.autorenderUrl,
+				condition:
+					!window.renderMathInElement
+					&& !document.querySelector('script[src="' + options.autorenderUrl + '"]')
+			}
+		];
 
-	options.katexScript     = 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.3/katex.min.js';
-	options.katexStylesheet = 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.3/katex.min.css';
+		function renderMath() {
+			window.addEventListener('load', function(){
+				window.renderMathInElement(
+					reveal.getViewportElement(),
+					{
+						delimiters: [
+							{left: "\\(", right: "\\)", display: false},
+							{left: "\\[", right: "\\]", display: true}
+						],
+						strict: false,
+						trust: true,
+						macros: macros
+					}
+				);
 
-	if ( options.ignoredElements ) {
-		options.ignoredElements = options.ignoredElements
-			.map(function ( x ) {
-				return x.toUpperCase;
+				if(options.resetFragmentIndicesAfterTypeset || options.fragmentIndexCSS) {
+					for(let slide of reveal.getSlides()){
+						for (let fragment of slide.querySelectorAll('.fragment'))
+							if (fragment.hasAttribute('data-fragment-index'))
+								fragment.removeAttribute('data-fragment-index');
+
+						for(let i = 0; i < 15; ++i) {
+							let fragments = slide.querySelectorAll('.fragment.fragidx-' + i.toString());
+							for(let fragment of fragments)
+								fragment.setAttribute('data-fragment-index', i);
+						}
+					}
+				}
+				reveal.layout();
 			});
-	} else {
-		options.ignoredElements = [ 'PRE', 'CODE' ];
-	}
-
-	if ( options.enableGlobally === undefined ) {
-		options.enableGlobally = true;
-	}
-
-	if ( options.notificationsEnabled === undefined ) {
-		options.notificationsEnabled = true;
-	}
+		}
 
 
-	// Hard-coded settings:
-
-	var defaults = {
-		// Will try to fetch KaTeX from these URLs, if no local copy can be
-		// found
-		cdn: {
-			script:     'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.3/katex.min.js',
-			stylesheet: 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.3/katex.min.css'
-		},
-
-		formulaClass: 'formula',
-		ignoredClass: 'math-ignored'
-	};
-
-	// -------------------------------------------------------------------------
-
-
-	function addStylesheet() {
-		// - To fix a CSS issue: Prevent reveal.js from overriding the font of
-		//   KaTeX elements.
-		//
-		// - To highlight errors (`.math-katex-error`)
-
-		var stylesheet = document.createElement( 'style' );
-
-		stylesheet.innerHTML = [
-			'.reveal .katex { font-family: KaTeX_Main; }',
-			'.reveal .math-katex-error { color: red }',
-
-			'.reveal .katex.display { display: block }',
-
-			'.reveal .katex.inline:not(first) {',
-			'    margin-left: 0.35em;',
-			'}'
-		]
-		.join( '\n' );
-
-		document.head.appendChild( stylesheet );
-	}
-
-
-
-	// --- TeX mode (dollars) --------------------------------------------------
-
-	/**
-	 * Replaces a formula within `$ … $` (inline) or `$$ … $$` (display).
-	 */
-	var replaceFormulaTex = (function() {
-
-		// Pre-compiled regular expressions
-
-		var regexInline   = /([^\\])\$([^\$]*)\$/g;       // $ … $
-		var regexDisplay  = /([^\\])\$\$([^\$]*)\$\$/g;   // $$ … $$
-
-		// For workarounds:
-		var regexCssClass = /<span class="katex">/;       // Used to add classes
-
-
-		return function ( mode, markup ) {
-			var regex;
-
-			if ( mode === 'inline'  ) {
-				regex = regexInline;
-			}
-			else if ( mode === 'display' ) {
-				regex = regexDisplay;
-			}
-			else {
-				throw new Error( 'Invalid mode: ' + mode );
+		function loadScript(params, extraCallback) {
+			if(params.condition !== undefined
+				&& !(params.condition === true || typeof params.condition == 'function' && params.condition.call())) {
+				return extraCallback ? extraCallback.call() : false;
 			}
 
+			if( params.type === undefined ) {
+				params.type = (params.url && params.url.match(/\.css[^.]*$/)) ? 'text/css' : 'text/javascript';
+			}
 
-			function replacer( _, lookbehind, group, offset ) {
-				// (Depends on mode, thus nested.)
+			let script = null;
 
-				group = replaceEntities( group );
-
-				if ( mode === 'display' ) {
-					var prefix = '\\displaystyle {';
-					offset += 2;    // $$
-					offset -= prefix.length;
-
-					group = prefix + group + '}';
+			if( params.type === 'text/css' ){
+				if( params.content ){
+					script = document.createElement('style');
+					script.textContent = params.content;
 				}
 				else {
-					offset++;    // $
+					script = document.createElement('link');
+					script.rel = 'stylesheet';
+					script.type = 'text/css';
+					script.href = params.url;
 				}
-
-				var markup;
-				try {
-					markup = lookbehind + katex.renderToString( group );
-				}
-				catch ( error ) {
-					correctErrorPosition( error, offset );  // mutates the error
-					throw error;
-				}
-
-
-				// Add a class for the mode to the root element
-				markup = markup.replace(
-					regexCssClass,
-					'<span class="katex ' + mode + '">'
-				);
-
-				return markup;
-			}
-
-			markup = markup.replace( regex, replacer );
-			return markup;
-		};
-
-	})();
-
-
-	var replaceEntities = (function () {
-		var regexEntityLt = /&lt;/g;
-		var regexEntityGt = /&gt;/g;
-
-		return function ( markup ) {
-			// Replace `&lt;` and `&gt;`
-			return markup
-				.replace( regexEntityLt, '<' )
-				.replace( regexEntityGt, '>' );
-		};
-	})();
-
-
-	/**
-	 * Unescapes `\$` to `$` (for `tex` mode).
-	 */
-	var unescapeDollarSign = (function() {
-
-		var regexUnescape = /\\\$/g;
-
-		return function ( text ) {
-			return text.replace( regexUnescape, '$' );
-		};
-	})();
-
-
-
-	// --- Formula error handling ----------------------------------------------
-
-	/**
-	 * Change the `position` property of an error object thrown by KaTeX to get
-	 * a more accurate error position. Mutates the passed object.
-	 */
-	function correctErrorPosition( error, offset ) {
-		offset = offset || 0;
-		error.position += offset;
-
-		// Look for "… got '…' …" error message to adjust the position
-		// (this will probably be broken by KaTeX updates).
-
-		var matches = error.message.match( /got\s'(.*?)'/ );
-		if ( matches !== null ) {
-			// Text: "… got '…' …"
-			error.position -= matches[1].length;
-		}
-	}
-
-
-	/**
-	 * Handles a KaTeX error by showing a more meaningful error message and
-	 * highlighting the error on the slide.
-	 *
-	 * Wraps the error with a `span` with class `math-katex-error`. Notifies the
-	 * user, but only for the first error.
-	 */
-	var handleError = (function() {
-
-		var showedError = false;
-
-		return function( error, formulaElement ) {
-
-			var e = formulaElement;
-			var slideNumber = getSlideNumber( e );
-
-			// Wrap
-			var s = e.innerHTML;
-			e.innerHTML = s.slice( 0, error.position ) +
-			              '<span class="math-katex-error">' +
-			              s.slice( error.position ) +
-			              '</span>';
-
-			// Just show a `window.alert`
-			if ( options.notificationsEnabled && !showedError ) {
-				window.alert(
-					'Formula on slide ' + slideNumber +
-					' contains an error:\n\n' + error.message
-				);
-
-				showedError = true;
-			}
-
-			throw new Error(
-				'Formula error on slide ' + slideNumber + ': ' +
-				error.message + '\n' +
-				error.stack
-			);
-		};
-	})();
-
-
-	/**
-	 * Returns the slide number for a `section` DOM element.
-	 *
-	 * @param {Node} element    An element on a slide, or the `section` itself.
-	 */
-	function getSlideNumber( element ) {
-		var presentation = document.querySelector( '.reveal .slides' );
-		var slides = presentation.querySelectorAll( 'section' );
-		var slideElement = getParentSlide( element );
-
-		for ( var i = 0; i < slides.length; i++ ) {
-			if ( slides[i] === slideElement ) {
-				return i;     // -1 here because the title slide is not counted.
-			}
-		}
-
-		return null;
-	}
-
-
-	function getParentSlide( element ) {
-
-		if ( element.nodeName === 'SECTION' ) {
-			return element;
-		}
-
-		do {
-			element = element.parentNode;
-		} while ( element && element.nodeName !== 'SECTION' );
-
-		return element;
-	}
-
-
-
-	// --- Perform replacements ------------------------------------------------
-
-
-	/**
-	 * Replaces formulas in all slides: `$…$` / `$$…$$` or wrapped in elements
-	 * with class `formula` or `math`.
-	 */
-	function replaceFormulas() {
-
-		// Elements that wrap formulas explictly
-		var wrappedElements = document.querySelectorAll( '.formula, .math' );
-
-		// Slides that contain `$…$` or `$$…$$`
-		var texSlideElements = document.querySelectorAll(
-			options.enableGlobally === true ?
-			'.reveal section' :
-			'.reveal section[data-math]'
-		);
-
-
-		/**
-		 * Tests if an element should be ignored for formula replacements.
-		 */
-		function isIgnored( element ) {
-
-			var e = element;
-
-			var isIgnoredElement =
-				options.ignoredElements.indexOf( e.nodeName ) !== -1;
-
-			// Elements may be marked as ignored with a class
-			var isIgnoredClass =
-				e.classList.contains( defaults.ignoredClass );
-
-			// Also look for the ignored class on the parent (non-recursive)
-			var parent = e.parentNode;
-			if ( parent ) {
-				isIgnoredClass = isIgnoredClass || parent.classList.contains(
-					defaults.ignoredClass
-				);
-			}
-
-			// Ignore script elements, unless they are templates (e.g. Markdown)
-			var isTemplate = e.getAttribute( 'type' ) === 'text/template';
-			var isScript = e.nodeName === 'SCRIPT' && !isTemplate;
-
-			return isIgnoredElement || isIgnoredClass || isScript;
-		}
-
-
-		/**
-		 * `forEach` for a set of DOM elements, excludes ignored elements.
-		 */
-		function each( arrayLike, f ) {
-			for ( var i = 0; i < arrayLike.length; i++ ) {
-				var element = arrayLike[i];
-
-				if ( !isIgnored( element ) ) {
-					f( element, i );
-				}
-			}
-		}
-
-
-		// Render <… class="formula"> … <…/> formulas
-
-		each( wrappedElements, function ( e ) {
-
-			var formula = e.textContent;
-			var offset = 0;    // For error-position correction
-
-			if ( e.classList.contains( 'display' ) ) {
-				// Prepend KaTeX instruction, correct offset
-
-				var prefix = '\\displaystyle {';
-				formula = prefix + formula + '}';
-				offset -= prefix.length;
 			}
 			else {
-				e.classList.add( 'inline' );     // ensure class
-			}
-
-			try {
-				e.innerHTML = katex.renderToString( formula );
-
-				e.classList.add( 'formula' );    // In case it was selected
-				                                 // with `.math`.
-
-				// KaTeX adds a wrapper element, but we already have one, so
-				// unwrap:
-				e.classList.add( 'katex' );
-				e.innerHTML = e.querySelector( '.katex' ).innerHTML;
-			}
-			catch ( error ) {
-				correctErrorPosition( error, offset );  // mutates the error
-				handleError( error, e );
-			}
-		});
-
-
-		// Render `$…$` and `$$…$$` formulas
-		// (must run after wrapped elements replacements to not replace twice)
-
-		each( texSlideElements, function ( e ) {
-
-			try {
-				e.innerHTML = replaceFormulaTex( 'display', e.innerHTML );
-				e.innerHTML = replaceFormulaTex( 'inline',  e.innerHTML );
-				e.innerHTML = unescapeDollarSign( e.innerHTML );
-
-				// Add a class to the created rendered elements (but keep class
-				// `katex`, KaTeX needs this for its own CSS)
-
-				var renderedFormulas = e.querySelectorAll( '.katex' );
-
-				each( renderedFormulas, function ( forumula ) {
-					forumula.classList.add( defaults.formulaClass );
-				});
-			}
-			catch ( error ) {
-				handleError( error, e );
-			}
-		});
-	}
-
-
-	// --- Script and stylesheet loading ---------------------------------------
-
-	function loadAsset( options ) {
-		// (Adopted from `math` plugin)
-
-		if ( typeof options === 'string' ) {
-			var url = options;
-			options = {};
-			options.url = url;
-		}
-
-		var type = options.url.split( '.' ).slice( -2 ).indexOf( 'js' ) !== -1 ?
-		           'script' :
-		           'stylesheet';
-
-		var head = document.querySelector( 'head' );
-		var element;
-
-		if ( type === 'script' ) {
-			var script = document.createElement( 'script' );
-			script.type = 'text/javascript';
-			script.src = options.url;
-			element = script;
-		}
-		else if ( type === 'stylesheet' ) {
-			var link = document.createElement( 'link' );
-			link.rel = 'stylesheet';
-			link.href = options.url;
-			element = link;
-		}
-
-		// Wrapper for callback to make sure it only fires once
-		var finish = function() {
-			if ( typeof options.onLoad === 'function' ) {
-				options.onLoad.call();
-				options.onLoad = null;
-			}
-		};
-
-		element.onload = finish;
-		element.onerror = options.onError;
-
-		// IE
-		element.onreadystatechange = function() {
-			if ( this.readyState === 'loaded' ) {
-				finish();
-			}
-		};
-
-		// Normal browsers
-		head.appendChild( element );
-	}
-
-
-
-	// --- Load KaTeX and run the plugin ---------------------------------------
-
-	// (Could really use promises. Avoided another dependency for now … )
-
-
-	/**
-	 * Loads KaTeX by first trying to load it locally (from `lib/katex`), then
-	 * from a CDN as a fallback.
-	 */
-	function loadKatex( callback ) {
-
-		if ( window.katex ) {
-			callback();    // Already loaded.
-			return;
-		}
-
-		// Try to load it from `lib/katex` (or another configured path)
-		loadAsset({
-			url: options.katexScript,
-
-			onLoad: function() {
-				loadAsset( options.katexStylesheet );   // Load CSS in parallel
-				callback();
-			},
-
-			onError: tryToGetFromCdn
-		});
-
-
-		function tryToGetFromCdn() {
-
-			loadAsset( defaults.cdn.stylesheet );       // Load CSS in parallel
-
-			loadAsset({
-				'url': defaults.cdn.script,
-
-				onLoad: function() {
-					console.log( 'Loaded KaTeX from the CDN' );
-					callback();
-				},
-
-				onError: function() {
-					throw new Error(
-						'Could not load KaTeX from `lib` directory or CDN.'
-					);
+				script = document.createElement('script');
+				script.type = params.type || 'text/javascript';
+				if( params.content ) {
+					script.textContent = params.content;
 				}
+				else {
+					script.src = params.url;
+				}
+			}
+
+			if(params.content){
+				document.querySelector('head').appendChild( script );
+				if(params.callback) {
+					params.callback.call();
+				}
+				if(extraCallback) {
+					extraCallback.call();
+				}
+			}
+			else {
+				script.onload = function(){
+					if(params.callback) {
+						params.callback.call();
+					}
+					if(extraCallback) {
+						extraCallback.call();
+					}
+				};
+
+				document.querySelector( 'head' ).appendChild( script );
+			}
+		}
+
+		function loadScripts( scripts, callback ) {
+			if(!scripts || scripts.length === 0) {
+				if (typeof callback === 'function') {
+					if(reveal.isReady()) {
+						callback.call();
+						callback = null;
+					}
+					else {
+						reveal.addEventListener('ready', function () {
+							callback.call();
+							callback = null;
+						});
+					}
+				}
+				return;
+			}
+
+			let script = scripts.splice(0, 1)[0];
+			loadScript(script, function () {
+				loadScripts(scripts, callback);
 			});
 		}
+
+		loadScripts(scriptsToLoad, renderMath);
+
+		return true;
 	}
+};
 
-
-	function runPlugin() {
-
-		addStylesheet();
-		replaceFormulas();
-
-		Reveal.layout();    // Update the slide layout
-
-		// Trigger `math-rendered` event
-		var event = document.createEvent( 'HTMLEvents', 1, 2 );
-		event.initEvent( 'math-rendered', true, true );
-		document.querySelector( '.reveal' ).dispatchEvent( event );
-
-	}
-
-	loadKatex( runPlugin );
-
-})();
+// export default () => RevealInking;

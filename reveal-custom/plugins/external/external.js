@@ -198,7 +198,7 @@ const RevealExternal = {
             }
         }
 
-        loadExternal(document);
+        loadExternal(reveal.getViewportElement());
     }
 };
 

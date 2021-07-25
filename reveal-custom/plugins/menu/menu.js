@@ -7,6 +7,7 @@
 const RevealMenu = {
 	id: 'menu',
 	init: (reveal) => {
+		let revealViewport = reveal.getViewportElement();
 		let config = reveal.getConfig();
 		let options = config.menu || {};
 		if(!options.path) {
@@ -14,7 +15,7 @@ const RevealMenu = {
 				options.path = document.currentScript.src.slice(0, -7);
 			} else {
 				let sel = document.querySelector('script[src$="menu.js"]');
-				options.path = sel ? sel.src.slice(0, -7) : 'plugin/menu/';
+				options.path = sel ? sel.src.slice(0, -"menu.js".length) : 'plugin/menu/';
 			}
 		}
 		if (!options.path.endsWith('/')) {
@@ -78,33 +79,6 @@ const RevealMenu = {
 			return el;
 		}
 
-		// modified from math plugin
-		function loadResource( url, type, callback ) {
-			let head = document.querySelector( 'head' );
-			let resource;
-
-			if ( type === 'script' ) {
-				resource = document.createElement( 'script' );
-				resource.type = 'text/javascript';
-				resource.src = url;
-			}
-			else if ( type === 'stylesheet' ) {
-				resource = document.createElement( 'link' );
-				resource.rel = 'stylesheet';
-				resource.href = url;
-			}
-
-			// Wrapper for callback to make sure it only fires once
-			resource.onload = function() {
-				if( typeof callback === 'function' ) {
-					callback.call();
-					callback = null;
-				}
-			};
-
-			head.appendChild( resource );
-		}
-
 
 		let initialised = false;
 
@@ -121,10 +95,10 @@ const RevealMenu = {
 		function reenableMouseSelection() {
 			// wait until the mouse has moved before re-enabling mouse selection
 			// to avoid selections on scroll
-			document.querySelector(
+			revealViewport.querySelector(
 				'nav.rmenu'
 			).addEventListener('mousemove', function fn() {
-				document.querySelector('nav.rmenu').removeEventListener('mousemove', fn);
+				revealViewport.querySelector('nav.rmenu').removeEventListener('mousemove', fn);
 				//XXX this should select the item under the mouse
 				mouseSelectionEnabled = true;
 			});
@@ -174,7 +148,7 @@ const RevealMenu = {
 		// }
 
 		function deselectAllMenuItems() {
-			for(let item of document.querySelectorAll('.active-menu-panel .rmenu-items li.selected')) {
+			for(let item of revealViewport.querySelectorAll('.active-menu-panel .rmenu-items li.selected')) {
 				item.classList.remove('selected');
 			}
 		}
@@ -188,13 +162,13 @@ const RevealMenu = {
 		}
 
 		function getSlideMenuItem(h, v) {
-			return document.querySelector(
+			return revealViewport.querySelector(
 				'.active-menu-panel .rmenu-items li[data-slide-h="' + h + '"][data-slide-v="' + v + '"]'
 			);
 		}
 
 		function getMenuItem(itemIndex) {
-			return document.querySelector(
+			return revealViewport.querySelector(
 				'.active-menu-panel .rmenu-items li[data-item-index="' + itemIndex + '"]'
 			);
 		}
@@ -204,13 +178,15 @@ const RevealMenu = {
 		}
 
 		function getSelectedMenuItem() {
-			return document.querySelector(
+			return revealViewport.querySelector(
 				'.active-menu-panel .rmenu-items li.selected'
-			) || document.querySelector(
+			) || revealViewport.querySelector(
 				'.active-menu-panel .rmenu-items li.active'
 			);
 		}
 		function onDocumentKeyDown(event) {
+			if(config.keyboardCondition == 'focused' && !reveal.isFocused())
+				return true;
 			let currItem = null;
 			let item = null;
 			if (isOpen()) {
@@ -234,7 +210,7 @@ const RevealMenu = {
 						deselectAllMenuItems();
 
 						if (!currItem) {
-							currItem = document.querySelector('.active-menu-panel .rmenu-items li.rmenu-item');
+							currItem = revealViewport.querySelector('.active-menu-panel .rmenu-items li.rmenu-item');
 							if (currItem) {
 								selectMenuItem(currItem);
 							}
@@ -281,7 +257,7 @@ const RevealMenu = {
 					case 'End':
 						deselectAllMenuItems();
 
-						item = document.querySelector(
+						item = revealViewport.querySelector(
 							'.active-menu-panel .rmenu-items li:'
 							+
 							(event.key === 'Home' ? 'first' : 'last')
@@ -296,7 +272,7 @@ const RevealMenu = {
 						break;
 
 					case ' ': case 'Enter':
-						currItem = document.querySelector('.active-menu-panel .rmenu-items li.selected');
+						currItem = revealViewport.querySelector('.active-menu-panel .rmenu-items li.selected');
 						if (currItem) {
 							openMenuItem(currItem, true);
 						}
@@ -326,21 +302,21 @@ const RevealMenu = {
 				}
 			});
 
-			// Prevent reveal from processing keyboard events when the menu is open
-			if (config.keyboardCondition && typeof config.keyboardCondition === 'function') {
-				// combine user defined keyboard condition with the menu's own condition
-				let userCondition = config.keyboardCondition;
-				config.keyboardCondition = function() {
-					return userCondition() && !isOpen();
-				};
-			} else {
-				config.keyboardCondition = function() { return !isOpen(); }
-			}
+			// // Prevent reveal from processing keyboard events when the menu is open
+			// if (config.keyboardCondition && typeof config.keyboardCondition === 'function') {
+			// 	// combine user defined keyboard condition with the menu's own condition
+			// 	let userCondition = config.keyboardCondition;
+			// 	config.keyboardCondition = function() {
+			// 		return userCondition() && !isOpen();
+			// 	};
+			// } else {
+			// 	config.keyboardCondition = function() { return !isOpen(); }
+			// }
 		}
 
 
 		//
-		// Utilty functions
+		// Utility functions
 		//
 
 		function openMenu(event) {
@@ -348,18 +324,18 @@ const RevealMenu = {
 			if (isOpen()) {
 				return;
 			}
-			document.querySelector('body').classList.add('rmenu-active');
-			document.querySelector('.reveal').classList.add('has-' + options.effect + '-' + options.side);
-			document.querySelector('.rmenu').classList.add('active');
-			document.querySelector('.rmenu-overlay').classList.add('active');
+			revealViewport.classList.add('rmenu-active');
+			revealViewport.classList.add('has-' + options.effect + '-' + options.side);
+			revealViewport.querySelector('.rmenu').classList.add('active');
+			revealViewport.querySelector('.rmenu-overlay').classList.add('active');
 
 			// identify active theme
 			if (options.themes) {
-				for(let i of document.querySelectorAll('div[data-panel="Themes"] li')) {
+				for(let i of revealViewport.querySelectorAll('div[data-panel="Themes"] li')) {
 					i.classList.remove('active')
 				}
 				let currentThemeLink = document.querySelector('link#theme').getAttribute('href');
-				for(let i of document.querySelectorAll('li[data-theme="' + currentThemeLink + '"]')) {
+				for(let i of revealViewport.querySelectorAll('li[data-theme="' + currentThemeLink + '"]')) {
 					i.classList.add('active')
 				}
 			}
@@ -384,10 +360,10 @@ const RevealMenu = {
 		function closeMenu(event, force) {
 			if (event) event.preventDefault();
 			if (!options.sticky || force) {
-				document.querySelector('body').classList.remove('rmenu-active');
-				document.querySelector('.reveal').classList.remove('has-' + options.effect + '-' + options.side);
-				document.querySelector('.rmenu').classList.remove('active');
-				document.querySelector('.rmenu-overlay').classList.remove('active');
+				revealViewport.classList.remove('rmenu-active');
+				revealViewport.classList.remove('has-' + options.effect + '-' + options.side);
+				revealViewport.querySelector('.rmenu').classList.remove('active');
+				revealViewport.querySelector('.rmenu-overlay').classList.remove('active');
 				deselectAllMenuItems();
 			}
 		}
@@ -401,7 +377,7 @@ const RevealMenu = {
 		}
 
 		function isOpen() {
-			return document.querySelector('body').classList.contains('rmenu-active');
+			return revealViewport.classList.contains('rmenu-active');
 		}
 
 		function openPanel(event, ref) {
@@ -410,23 +386,23 @@ const RevealMenu = {
 			if (typeof ref !== "string") {
 				panel = event.currentTarget.getAttribute('data-panel');
 			}
-			document.querySelector('.rmenu-toolbar > li.active-toolbar-button').classList.remove('active-toolbar-button');
-			document.querySelector('li[data-panel="' + panel + '"]').classList.add('active-toolbar-button');
-			document.querySelector('.rmenu-panel.active-menu-panel').classList.remove('active-menu-panel');
-			document.querySelector('div[data-panel="' + panel + '"]').classList.add('active-menu-panel');
+			revealViewport.querySelector('.rmenu-toolbar > li.active-toolbar-button').classList.remove('active-toolbar-button');
+			revealViewport.querySelector('li[data-panel="' + panel + '"]').classList.add('active-toolbar-button');
+			revealViewport.querySelector('.rmenu-panel.active-menu-panel').classList.remove('active-menu-panel');
+			revealViewport.querySelector('div[data-panel="' + panel + '"]').classList.add('active-menu-panel');
 		}
 
 		function nextPanel() {
-			let next = (parseInt(document.querySelector('.active-toolbar-button').getAttribute('data-button')) + 1) % nButtonsTotal;
-			openPanel(null, document.querySelector('.toolbar-panel-button[data-button="' + next + '"]').getAttribute('data-panel'));
+			let next = (parseInt(revealViewport.querySelector('.active-toolbar-button').getAttribute('data-button')) + 1) % nButtonsTotal;
+			openPanel(null, revealViewport.querySelector('.toolbar-panel-button[data-button="' + next + '"]').getAttribute('data-panel'));
 		}
 
 		function prevPanel() {
-			let next = parseInt(document.querySelector('.active-toolbar-button').getAttribute('data-button')) - 1;
+			let next = parseInt(revealViewport.querySelector('.active-toolbar-button').getAttribute('data-button')) - 1;
 			if (next < 0) {
 				next = nButtonsTotal - 1;
 			}
-			openPanel(null, document.querySelector('.toolbar-panel-button[data-button="' + next + '"]').getAttribute('data-panel'));
+			openPanel(null, revealViewport.querySelector('.toolbar-panel-button[data-button="' + next + '"]').getAttribute('data-panel'));
 		}
 
 		function openMenuItem(item, force) {
@@ -496,7 +472,7 @@ const RevealMenu = {
 
 		function matchRevealStyle() {
 			let revealStyle = window.getComputedStyle(reveal.getRevealElement());
-			let element = document.querySelector('.rmenu');
+			let element = revealViewport.querySelector('.rmenu');
 			element.style.fontFamily = revealStyle.fontFamily;
 			//XXX could adjust the complete menu style to match the theme, ie colors, etc
 		}
@@ -504,7 +480,7 @@ const RevealMenu = {
 		let nButtonsTotal = 0;
 		function init() {
 			if (!initialised) {
-				let parent = document.querySelector('.reveal').parentElement;
+				let parent = reveal.getViewportElement();
 				let top = createDomNode('div', { 'class': 'rmenu-wrapper'});
 				parent.appendChild(top);
 				let panels = createDomNode('nav', { 'class': 'rmenu rmenu--' + options.side});
@@ -524,7 +500,7 @@ const RevealMenu = {
 				overlay.onclick = function() { closeMenu(null, true) };
 
 				let toolbar = createDomNode('ol', {'class': 'rmenu-toolbar'});
-				document.querySelector('.rmenu').appendChild(toolbar);
+				revealViewport.querySelector('.rmenu').appendChild(toolbar);
 
 				function addToolbarButton(title, ref, icon, style, fn, active) {
 					let attrs = {
@@ -574,7 +550,7 @@ const RevealMenu = {
 				//
 				function generateSlideLinkMenuItem(type, section, i, h, v) {
 					function text(selector, parent) {
-						let el = (parent ? section.querySelector(selector) : document.querySelector(selector));
+						let el = (parent ? section.querySelector(selector) : revealViewport.querySelector(selector));
 						if (el) return el.textContent;
 						return null;
 					}
@@ -655,14 +631,14 @@ const RevealMenu = {
 				}
 
 				function createSlideMenu() {
-					if ( !document.querySelector('section[data-markdown]:not([data-markdown-parsed])') ) {
+					if ( !revealViewport.querySelector('section[data-markdown]:not([data-markdown-parsed])') ) {
 						let panel = createDomNode('div', {
 							'data-panel': 'Slides',
 							'class': 'rmenu-panel active-menu-panel'
 						});
 						panel.appendChild(createDomNode('ul', {class: "rmenu-items"}));
 						panels.appendChild(panel);
-						let items = document.querySelector('.rmenu-panel[data-panel="Slides"] > .rmenu-items');
+						let items = revealViewport.querySelector('.rmenu-panel[data-panel="Slides"] > .rmenu-items');
 						let slideCount = 0;
 						forAllNodes('.slides > section', null, function(section, h) {
 							if (section.querySelector('section')) {
@@ -682,7 +658,7 @@ const RevealMenu = {
 								}
 							}
 						});
-						for(let i of document.querySelectorAll('.rmenu-item, .rmenu-item-vertical')) {
+						for(let i of revealViewport.querySelectorAll('.rmenu-item, .rmenu-item-vertical')) {
 							i.onclick = clicked;
 						}
 						highlightCurrentSlide();
@@ -804,19 +780,19 @@ const RevealMenu = {
 					let link = createDomNode('a', {href: '#'});
 					link.appendChild(createDomNode('i', {class: 'fas fa-bars'}));
 					div.appendChild(link);
-					document.querySelector('.reveal').appendChild(div);
+					revealViewport.appendChild(div);
 					div.onclick = openMenu;
 				}
 
-				if (options.openSlideNumber && document.querySelector('div.slide-number')) {
+				if (options.openSlideNumber && revealViewport.querySelector('div.slide-number')) {
 					// wrap slide number in link
-					document.querySelector('div.slide-number').onclick = openMenu;
+					revealViewport.querySelector('div.slide-number').onclick = openMenu;
 				}
 
 				//
 				// Handle mouse overs
 				//
-				for(let item of document.querySelectorAll('.rmenu-panel .rmenu-items li')){
+				for(let item of revealViewport.querySelectorAll('.rmenu-panel .rmenu-items li')){
 					item.addEventListener("mouseenter", handleMouseHighlight);
 				}
 
@@ -845,7 +821,7 @@ const RevealMenu = {
 			let event = document.createEvent( 'HTMLEvents');
 			event.initEvent( type, true, true );
 			Object.assign( event, args );
-			document.querySelector('.reveal').dispatchEvent( event );
+			revealViewport.dispatchEvent( event );
 
 			// If we're in an iframe, post each reveal.js event to the
 			// parent window. Used by the notes plugin
