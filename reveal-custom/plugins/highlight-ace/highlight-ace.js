@@ -9,8 +9,8 @@ let RevealHighlight = (function() {
 	let options = Reveal.getConfig().highlighting || {};
 	let ACE_DEFAULT_THEME = options.theme || 'twilight';
 	let ACE_DEFAULT_LANGUAGE = options.language || 'python';
-	let ACE_URL = options.aceMainUrl || 'https://cdn.jsdelivr.net/npm/ace-builds@1.4.12/src-min/ace.js';
-	let ACE_HIGHLIGHT_URL = options.aceStaticHighlighterUrl || 'https://cdn.jsdelivr.net/npm/ace-builds@1.4.12/src-min/ext-static_highlight.js';
+	let ACE_URL = options.aceMainUrl || 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js';
+	let ACE_HIGHLIGHT_URL = options.aceStaticHighlighterUrl || 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ext-static_highlight.min.js';
 	let EDITOR_IN_PLACE_BY_DEFAULT = options.editorInPlace !== false;
 	let CLOSE_ACE_ON_BLUR_BY_DEFAULT = options.closeEditorOnBlur;
 	let MOUSECLICK_MODIFIER = options.mouseclickModifierKey;
@@ -37,7 +37,7 @@ let RevealHighlight = (function() {
 
 		function destroyEditor(editor) {
 			editor.container.style.transition = '0.4s ease';
-			editor.container.style.opacity = 0;
+			editor.container.style.opacity = '0';
 			setTimeout(function () {
 				if(editor.container.parentNode){
 					editor.container.parentNode.removeChild(editor.container);
@@ -77,7 +77,7 @@ let RevealHighlight = (function() {
 				let editor = null;
 				let editorDiv = document.createElement('div');
 				editorDiv.style.position = 'fixed';
-				editorDiv.style.opacity = 0;
+				editorDiv.style.opacity = '0';
 
 				if(codeElement.hasAttribute('data-editor-inplace') || EDITOR_IN_PLACE_BY_DEFAULT) {
 					let rect = codeElement.getBoundingClientRect();
@@ -127,7 +127,7 @@ let RevealHighlight = (function() {
 				editor.resize();
 				editor.gotoLine(1);
 				editorDiv.style.transition = '0.5s ease';
-				editorDiv.style.opacity = 1;
+				editorDiv.style.opacity = '1';
 			}
 		}
 	}
@@ -155,4 +155,4 @@ let RevealHighlight = (function() {
 	return true;
 })();
 
-Reveal.registerPlugin( 'highlightAce', RevealHighlight );
+Reveal.registerPlugin('highlightAce', RevealHighlight);

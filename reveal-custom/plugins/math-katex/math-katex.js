@@ -3,9 +3,9 @@ const RevealKatex = {
 	init: (reveal) => {
 		let options = reveal.getConfig().math || {};
 		options = {
-			katexUrl: options.katexUrl || 'https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js',
-			autorenderUrl: options.autorenderUrl || 'https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js',
-			katexCssUrl: options.katexCssUrl || 'https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css',
+			katexUrl: options.katexUrl || 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.18/katex.min.js',
+			autorenderUrl: options.autorenderUrl || 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.18/contrib/auto-render.min.js',
+			katexCssUrl: options.katexCssUrl || 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.18/katex.min.css',
 			resetFragmentIndicesAfterTypeset: options.resetFragmentIndicesAfterTypeset !== false,
 			fragmentIndexCSS: options.fragmentIndexCSS !== false,
 			macros: options.macros || {}

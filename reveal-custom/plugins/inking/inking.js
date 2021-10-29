@@ -19,10 +19,10 @@ const RevealInking = {
         let options = reveal.getConfig().inking || {};
 
         options.canvasAboveControls = !!(options.canvasAboveControls);
-        let CONTROLS_VISIBLE = options.controls !== false;
+        let controlsVisible = options.controls !== false;
         options.controls = options.controls || {};
         options.controls = {
-            visible: CONTROLS_VISIBLE,
+            visible: controlsVisible,
             color: options.controls.color || 'rgb(0,0,0)',
             shadow: options.controls.shadow || '0 0 5px black',
             opacity: options.controls.opacity || 1,
@@ -107,11 +107,11 @@ const RevealInking = {
                     + '.ink-serializecanvas:before {content: "\u2B07"} ',
                 type: 'text/css'
             }, {
-                url: 'https://cdn.jsdelivr.net/npm/fabric@4.5.1/dist/fabric.min.js',
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/460/fabric.min.js',
                 condition: !window.fabric
             },
             {
-                url: 'https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-svg-full.js',
+                url: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.min.js',
                 condition: options.math.enabled && !reveal.getConfig().math && (!window.MathJax || !window.MathJax.version)
             }
         ];
@@ -1145,5 +1145,7 @@ const RevealInking = {
         return true;
     }
 };
+
+// Reveal.registerPlugin( 'revealInking', RevealInking );
 
 // export default () => RevealInking;

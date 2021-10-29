@@ -12,15 +12,15 @@
         String.prototype.includes = function(s){return this.indexOf(s) >= 0}
     }
     if(!String.prototype.startsWith){
-        String.prototype.startsWith = function(s){return this.indexOf(s) == 0}
+        String.prototype.startsWith = function(s){return this.indexOf(s) === 0}
     }
     if(!String.prototype.endsWith){
-        String.prototype.endsWith = function(s){return this.lastIndexOf(s) == this.length - s.length}
+        String.prototype.endsWith = function(s){return this.lastIndexOf(s) === this.length - s.length}
     }
 
     let defaultTransitionDuration =
-        Reveal.getConfig().animation && Reveal.getConfig().animation.default_transition_duration !== undefined ?
-            Reveal.getConfig().animation.default_transition_duration
+        Reveal.getConfig().animation && Reveal.getConfig().animation.defaultTransitionDuration !== undefined ?
+            Reveal.getConfig().animation.defaultTransitionDuration
         :
             null;
 
@@ -80,30 +80,30 @@
     function detectKeywords(tokens){
         let preResult = [];
         for(let token of tokens){
-            if(token.content || token.type == 'string'){
+            if(token.content || token.type === 'string'){
                 preResult.push(token);
             }
         }
         for( let i = 0; i < preResult.length; ++i){
-            if( preResult[i].type == 'word'
+            if( preResult[i].type === 'word'
                 && isKeyword(preResult[i].content)
-                && (i == 0
-                    || (preResult[i-1].type != 'keyword' || !isInList(preResult[i-1].content, ['apply','to','execute','show','hide', 'macro']) )
-                    && preResult[i-1].content != ','
-                    && preResult[i-1].content != '='
-                    && (i == preResult.length-1 || preResult[i+1].content != '=')) ){
+                && (i === 0
+                    || (preResult[i-1].type !== 'keyword' || !isInList(preResult[i-1].content, ['apply','to','execute','show','hide', 'macro']) )
+                    && preResult[i-1].content !== ','
+                    && preResult[i-1].content !== '='
+                    && (i === preResult.length-1 || preResult[i+1].content !== '=')) ){
                 preResult[i].type = 'keyword';
             }
         }
         for( let i = preResult.length-1; i >= 0; --i){
-            if( preResult[i].type != 'string' && preResult[i].content == ';' && (i == preResult.length - 1 || preResult[i+1].type == 'keyword') ){
+            if( preResult[i].type !== 'string' && preResult[i].content === ';' && (i === preResult.length - 1 || preResult[i+1].type === 'keyword') ){
                 preResult[i].type = 'keyword';
             }
         }
 
         let result = [];
         for( let i = 0; i < preResult.length; ++i){
-            if( !(preResult[i].content == ':' && i > 0 && preResult[i-1].type == 'keyword' && (preResult[i-1].content == 'initially' || preResult[i-1].content == 'next' || preResult[i-1].content == 'then') )){
+            if( !(preResult[i].content === ':' && i > 0 && preResult[i-1].type === 'keyword' && (preResult[i-1].content === 'initially' || preResult[i-1].content === 'next' || preResult[i-1].content === 'then') )){
                 result.push(preResult[i]);
             }
         }
@@ -118,20 +118,20 @@
     function tokenizeString(s, substitutions){
         let preResult = [{content: '', type: 'word'}];
         while(s){
-            if(s.slice(0,2) == '/*'){
+            if(s.slice(0,2) === '/*'){
                 let posEnd = s.indexOf('*/');
-                if(posEnd == -1){
+                if(posEnd === -1){
                     console.log('Unable to parse: a comment was not closed');
                     return {error: 'Unable to parse: a comment was not closed'};
                 }
                 s = s.slice(posEnd+2);
                 preResult.push({content: '', type: 'word'});
             }
-            else if(s.slice(0,3) == '"""' || s.slice(0,3) == "'''"){
-                let quot = s[0].repeat(3);
+            else if(s[0] === '"' || s[0] === "'"){
+                let quot = s.slice(0,3) === '"""' || s.slice(0,3) === "'''" ? s[0].repeat(3) : s[0];
                 s = s.slice(quot.length);
                 let posEnd = s.indexOf(quot);
-                if(posEnd == -1){
+                if(posEnd === -1){
                     console.log('Unable to parse: a string literal starting with ' + quot + ' was not closed');
                     return {error: 'Unable to parse: a string literal starting with ' + quot + ' was not closed'};
                 }
@@ -139,30 +139,18 @@
                 preResult.push({content: '', type: 'word'});
                 s = s.slice(posEnd+quot.length);
             }
-            else if(s[0] == '"' || s[0] == "'"){
-                let quot = s[0];
-                s = s.slice(quot.length);
-                let posEnd = s.indexOf(quot);
-                if(posEnd == -1){
-                    console.log('Unable to parse: a string literal starting with ' + quot + ' was not closed');
-                    return {error: 'Unable to parse: a string literal starting with ' + quot + ' was not closed'};
-                }
-                preResult.push({content: s.slice(0,posEnd), type: 'string'});
-                preResult.push({content: '', type: 'word'});
-                s = s.slice(posEnd+quot.length);
-            }
-            else if(s[0] == '[' && s.search(/^\[(\d+\s*(-\s*\d+)?\s*,)*(\d+\s*(-\s*\d*)?\s*)]/) == 0){
+            else if(s[0] === '[' && s.search(/^\[(\d+\s*(-\s*\d+)?\s*,)*(\d+\s*(-\s*\d*)?\s*)]/) === 0){
                 let posEnd = s.indexOf(']');
                 preResult.push({content: parseIndices(s.slice(1,posEnd).replace(/\s/g,'')), type: 'indices'});
                 preResult.push({content: '', type: 'word'});
                 s = s.slice(posEnd+1);
             }
-            else if(s[0] == ',' || s[0] == ':' || s[0] == ';' || s[0] == '='){
+            else if(s[0] === ',' || s[0] === ':' || s[0] === ';' || s[0] === '='){
                 preResult.push({content: s[0], type: 'word'});
                 preResult.push({content: '', type: 'word'});
                 s = s.slice(1);
             }
-            else if(s.search(/^\s+/) == 0){
+            else if(s.search(/^\s+/) === 0){
                 preResult.push({content: '', type: 'word'});
                 let posNonSpace = s.search(/\S/);
                 posNonSpace = posNonSpace >= 0 ? posNonSpace : s.length;
@@ -176,7 +164,7 @@
 
         let result = [];
         for( let i = 0; i < preResult.length; ++i){
-            if(preResult[i].content || preResult[i].type == 'string'){
+            if(preResult[i].content || preResult[i].type === 'string'){
                 result.push(preResult[i]);
             }
         }
@@ -186,10 +174,10 @@
         let localSubstitutions = [];
         let resultWithoutMacroCommands = [];
         for (let i = 0; i < result.length; ++i){
-            if(i <= result.length - 4 && result[i].type != 'string' && result[i].content == 'macro'
-                && ( result[i+1].type == 'string' || result[i+1].type == 'word' )
-                && result[i+2].type != 'string' && result[i+2].content == '='
-                && result[i+3].type == 'string'){
+            if(i <= result.length - 4 && result[i].type !== 'string' && result[i].content === 'macro'
+                && ( result[i+1].type === 'string' || result[i+1].type === 'word' )
+                && result[i+2].type !== 'string' && result[i+2].content === '='
+                && result[i+3].type === 'string'){
                 localSubstitutions.push([result[i+1].content, result[i+3].content]);
                 i += 3;
             }
@@ -203,12 +191,12 @@
         if(substitutions.length > 0) {
             let finalResult = [];
             substitutionLoop: for(let i = 0; i < resultWithoutMacroCommands.length; ++i){
-                if(resultWithoutMacroCommands[i].type != 'word'){
+                if(resultWithoutMacroCommands[i].type !== 'word'){
                     finalResult.push(resultWithoutMacroCommands[i]);
                 }
                 else{
                     for(let j = 0; j < substitutions.length; ++j){
-                        if(resultWithoutMacroCommands[i].content == substitutions[j][0]){
+                        if(resultWithoutMacroCommands[i].content === substitutions[j][0]){
                             let tokenList = tokenizeString(substitutions[j][1], substitutions);
                             for (let k = 0; k < tokenList.length; ++k){
                                 finalResult.push(tokenList[k]);
@@ -231,7 +219,7 @@
         let result = [];
         let lastSplitPos = -1;
         for(let i = 0; i < list.length; ++i){
-            if(list[i].type == 'keyword' && list[i].content == keyword){
+            if(list[i].type === 'keyword' && list[i].content === keyword){
                 result.push(list.slice(lastSplitPos+1, i));
                 lastSplitPos = i;
             }
@@ -240,50 +228,13 @@
         return result;
     }
 
-    function listToString(x){
-        if(typeof(x) == 'string'){
-            return '"' + x.toString() + '"';
-        }
-        else if(typeof(x) == 'number'){
-            return x.toString();
-        }
-        else if (x && x.length){
-            let r = '';
-            for (let i = 0; i < x.length; ++i){
-                if(r){
-                    r += ', ';
-                }
-                r += listToString(x[i]);
-            }
-            return '[' + r + ']';
-        }
-        else if (typeof(x) == 'object'){
-            let r = '';
-            for( let p in x ){
-                if(r){
-                    r += ', ';
-                }
-                r += p.toString() + ': ' + listToString(x[p]);
-            }
-            return '{' + r + '}';
-        }
-        else{
-            return '???';
-        }
-    }
-
-    function smartAlert(x){
-        alert(listToString(x));
-    }
-
-
     function getTime(tokenList){
         let timeString = '';
-        while( tokenList.length > 0 && timeString.search(/^\d+([.,]\d+)?m?s/) == -1 && isInList(tokenList[0].type,['word','string'])){
+        while( tokenList.length > 0 && timeString.search(/^\d+([.,]\d+)?m?s/) === -1 && isInList(tokenList[0].type,['word','string'])){
             timeString += tokenList[0].content;
             tokenList = tokenList.slice(1);
         }
-        if(timeString.search(/^\d+([.,]\d+)?m?s/) == -1){
+        if(timeString.search(/^\d+([.,]\d+)?m?s/) === -1){
             timeString = '0';
         }
 
@@ -310,7 +261,7 @@
             tokenList = tokenList.slice(1);
         }
 
-        if( tokenList.length > 0 && tokenList[0].type == 'indices' ){
+        if( tokenList.length > 0 && tokenList[0].type === 'indices' ){
             indices = tokenList[0].content;
             tokenList = tokenList.slice(1);
         }
@@ -324,17 +275,17 @@
 
     function getNextAnimationAtom(animationAtomScript){
         while( animationAtomScript.length > 0 &&
-            (animationAtomScript[0].type != 'keyword'
+            (animationAtomScript[0].type !== 'keyword'
             || !isInList(animationAtomScript[0].content, ['show','hide','execute','apply','reset']) )){
             animationAtomScript = animationAtomScript.slice(1);
         }
-        if (animationAtomScript.length == 0 ){
+        if (animationAtomScript.length === 0 ){
             return {parsedAtom: null, rest: []};
         }
 
         let parsedAnimationAtom = {animationType: animationAtomScript[0].content};
 
-        if( animationAtomScript[0].content == 'reset' ){
+        if( animationAtomScript[0].content === 'reset' ){
             parsedAnimationAtom.animationType = 'reset';
             let queryAndRest = getCssQuery(animationAtomScript.slice(1));
             animationAtomScript = queryAndRest.rest;
@@ -351,36 +302,36 @@
                 parsedAnimationAtom.objectQueryIndices = queryAndRest.indices;
             }
         }
-        else if( animationAtomScript[0].content == 'execute' ){
+        else if( animationAtomScript[0].content === 'execute' ){
             animationAtomScript = animationAtomScript.slice(1);
             if(animationAtomScript.length > 0 ) {
-                if (animationAtomScript[0].type == 'string') {
+                if (animationAtomScript[0].type === 'string') {
                     parsedAnimationAtom.code = animationAtomScript[0].content;
                 }
-                else if (animationAtomScript[0].type == 'word'){
+                else if (animationAtomScript[0].type === 'word'){
                     parsedAnimationAtom.code = animationAtomScript[0].content + '();';
                 }
                 animationAtomScript = animationAtomScript.slice(1);
             }
         }
-        else if( animationAtomScript[0].content == 'apply' ){
+        else if( animationAtomScript[0].content === 'apply' ){
             parsedAnimationAtom.animationType = 'apply';
             animationAtomScript = animationAtomScript.slice(1);
             while( animationAtomScript.length > 0 && !isInList(animationAtomScript[0].type, ['keyword','indices']) ){
-                while(animationAtomScript.length > 0 && animationAtomScript[0].content == ','){
+                while(animationAtomScript.length > 0 && animationAtomScript[0].content === ','){
                     animationAtomScript = animationAtomScript.slice(1);
                 }
-                if(animationAtomScript.length > 1 && animationAtomScript[1].content == '=' ){
+                if(animationAtomScript.length > 1 && animationAtomScript[1].content === '=' ){
                     let property = animationAtomScript[0].content;
                     let value = '';
                     animationAtomScript = animationAtomScript.slice(2);
-                    if(animationAtomScript.length > 0 && animationAtomScript[0].type == 'string' ){
+                    if(animationAtomScript.length > 0 && animationAtomScript[0].type === 'string' ){
                         value = animationAtomScript[0].content;
                         animationAtomScript = animationAtomScript.slice(1);
                     }
                     else {
-                        while( animationAtomScript.length > 0 && animationAtomScript[0].content != ',' && isInList(animationAtomScript[0].type, ['string', 'word'])
-                            && (animationAtomScript.length == 1 || animationAtomScript[1].content != '=') ){
+                        while( animationAtomScript.length > 0 && animationAtomScript[0].content !== ',' && isInList(animationAtomScript[0].type, ['string', 'word'])
+                            && (animationAtomScript.length === 1 || animationAtomScript[1].content !== '=') ){
                             if(value){
                                 value += ' ';
                             }
@@ -420,7 +371,7 @@
                 }
             }
             if (animationAtomScript.length > 0){
-                if( animationAtomScript[0].content == 'to'){
+                if( animationAtomScript[0].content === 'to'){
                     animationAtomScript = animationAtomScript.slice(1);
                 }
                 let queryAndRest = getCssQuery(animationAtomScript);
@@ -432,23 +383,23 @@
             }
         }
 
-        if(animationAtomScript.length > 0 && animationAtomScript[0].content == 'during'){
+        if(animationAtomScript.length > 0 && animationAtomScript[0].content === 'during'){
             let timeAndRest = getTime(animationAtomScript.slice(1));
             parsedAnimationAtom.duration = timeAndRest.time;
             animationAtomScript = timeAndRest.rest;
         }
 
-        if(animationAtomScript.length > 0 && animationAtomScript[0].content == 'delay'){
+        if(animationAtomScript.length > 0 && animationAtomScript[0].content === 'delay'){
             let timeAndRest = getTime(animationAtomScript.slice(1));
             parsedAnimationAtom.delay = timeAndRest.time;
             animationAtomScript = timeAndRest.rest;
         }
 
        if(animationAtomScript.length > 1
-            && animationAtomScript[0].type == 'keyword'
-            && animationAtomScript[0].content == 'rewind'){
+            && animationAtomScript[0].type === 'keyword'
+            && animationAtomScript[0].content === 'rewind'){
             animationAtomScript = animationAtomScript.slice(1);
-            if(animationAtomScript.length > 1 && animationAtomScript[0].type == 'string'){
+            if(animationAtomScript.length > 1 && animationAtomScript[0].type === 'string'){
                 parsedAnimationAtom.rewindScript = parseAnimationRawScript(detectKeywords(tokenizeString(animationAtomScript[0].content)));
                 animationAtomScript = animationAtomScript.slice(1);
             }
@@ -490,21 +441,6 @@
     }
 
 
-    function castCSS(t){
-        let newStyle = document.createElement('style');
-        newStyle.innerHTML = t;
-        document.head.appendChild(newStyle);
-        return newStyle;
-    }
-    function underlineNode(nodeQuery){
-        let styleText = ".animated-underline {display: inline-block;}  .animated-underline:after {content: '';display: block;margin-top: -5px;height: 3px;width: 0;background: transparent;transition: width .5s ease, background-color .5s ease;}  .animated-underline.fire:after {width: 100%;background: #068ee9;};";
-        castCSS(styleText);
-        let node = document.querySelector(nodeQuery);
-        setTimeout(function (){node.classList.add('animated-underline');
-        node.classList.add('fire');}, 100);
-    }
-
-
     /*
         Perform the animation.
      */
@@ -536,7 +472,7 @@
                     continue;
                 }
 
-                if (animationAtom.animationType == 'execute') {
+                if (animationAtom.animationType === 'execute') {
                     eval(animationAtom.code);
                     continue;
                 }
@@ -544,11 +480,11 @@
                 let animationObjectsUnfiltered = scope.querySelectorAll( animationAtom.objectQueryString );
                 let animationObjects = [];
                 for(let j = 0; j < animationObjectsUnfiltered.length; ++j){
-                    if(!animationObjectsUnfiltered[j].classList.contains('custom-animation-carrier') && animationObjectsUnfiltered[j].tagName.toLowerCase() != 'script'){
+                    if(!animationObjectsUnfiltered[j].classList.contains('custom-animation-carrier') && animationObjectsUnfiltered[j].tagName.toLowerCase() !== 'script'){
                         animationObjects.push(animationObjectsUnfiltered[j]);
                     }
                 }
-                if(animationObjects.length == 0 && animationAtom.objectQueryString == '*'){
+                if(animationObjects.length === 0 && animationAtom.objectQueryString === '*'){
                     animationObjects = [scope];
                 }
 
@@ -569,14 +505,14 @@
                         node.style.transitionDuration = defaultTransitionDuration;
                     }
 
-                    if(animationType == 'reset'){
+                    if(animationType === 'reset'){
                         for(let p in node.dataset){
                             if(p.startsWith('animationInitialBackup')){
                                 let parameter = camelToDashed(p);
                                 parameter = parameter.slice('animation-initial-backup-'.length);
                                 if(parameter.startsWith('class-')){
                                     parameter = parameter.slice('class-'.length);
-                                    if(node.dataset[p] == 'true'){
+                                    if(node.dataset[p] === 'true'){
                                         node.classList.add(parameter);
                                     }
                                     else{
@@ -591,25 +527,25 @@
                                     node.style[parameter] = node.dataset[p];
                                 }
                             }
-                            else if(p.search(/^dataAnimation\d+Backup/) == 0){
+                            else if(p.search(/^dataAnimation\d+Backup/) === 0){
                                 node.removeAttribute(camelToDashed(p));
                             }
                         }
                     }
-                    if(animationType == 'show') {
+                    if(animationType === 'show') {
                         animationType = 'apply';
                         animationAtom.propertiesToAssign = [];
-                        if(node.style.visibility != 'visible'){
+                        if(node.style.visibility !== 'visible'){
                             animationAtom.propertiesToAssign.push(['visibility','visible']);
                         }
-                        if(node.style.opacity == '0'){
+                        if(node.style.opacity === '0'){
                             animationAtom.propertiesToAssign.push(['opacity','1']);
                         }
                     }
-                    if(animationType == 'hide') {
+                    if(animationType === 'hide') {
                         animationType = 'apply';
                         animationAtom.propertiesToAssign = [];
-                        if(node.style.visibility != 'hidden'){
+                        if(node.style.visibility !== 'hidden'){
                             if(animationAtom.duration > 0){
                                 animationAtom.propertiesToAssign.push(['opacity','0']);
                             }
@@ -619,58 +555,49 @@
 
                         }
                     }
-                    if(animationType == 'apply'){
+                    if(animationType === 'apply'){
                         let classesToAdd = animationAtom.classesToAdd;
                         let classesToRemove = animationAtom.classesToRemove;
                         let classesToToggle = animationAtom.classesToToggle;
                         let propertiesToAssign = animationAtom.propertiesToAssign;
+                        function backupClass(cls){
+                            let bakupAttr = 'data-animation' + animationAtom.id.toString() + '-backup-class-' + cls;
+                            if(!noBackup && !node.hasAttribute(bakupAttr)){
+                                node.setAttribute(bakupAttr, node.classList.contains(cls));
+                            }
+                            let initialBackupAttr = 'data-animation-initial-backup-class-' + cls;
+                            if(!noBackup && !node.hasAttribute(initialBackupAttr)){
+                                node.setAttribute(initialBackupAttr, node.classList.contains(cls));
+                            }
+                        }
                         if(classesToAdd){
                             for(let k = 0; k < classesToAdd.length; ++k){
-                                let cls = classesToAdd[k];
-                                let backupAttr = 'data-animation' + animationAtom.id.toString() + '-backup-class-' + cls;
-                                if(!noBackup && !node.hasAttribute(backupAttr)){
-                                    node.setAttribute(backupAttr, node.classList.contains(cls));
-                                }
-                                let initialBackupAttr = 'data-animation-initial-backup-class-' + cls;
-                                if(!noBackup && !node.hasAttribute(initialBackupAttr)){
-                                    node.setAttribute(initialBackupAttr, node.classList.contains(cls));
-                                }
-                                node.classList.add(cls);
+                                backupClass(classesToAdd[k]);
+                                node.classList.add(classesToAdd[k]);
                             }
                         }
                         if(classesToRemove){
                             for(let k = 0; k < classesToRemove.length; ++k){
-                                let cls = classesToRemove[k];
-                                let bakupAttr = 'data-animation' + animationAtom.id.toString() + '-backup-class-' + cls;
-                                if(!noBackup && !node.hasAttribute(bakupAttr)){
-                                    node.setAttribute(bakupAttr, node.classList.contains(cls));
-                                }
-                                let initialBackupAttr = 'data-animation-initial-backup-class-' + cls;
-                                if(!noBackup && !node.hasAttribute(initialBackupAttr)){
-                                    node.setAttribute(initialBackupAttr, node.classList.contains(cls));
-                                }
-                                node.classList.remove(cls);
+                                backupClass(classesToRemove[k]);
+                                node.classList.remove(classesToRemove[k]);
                             }
                         }
                         if(classesToToggle){
                             for(let k = 0; k < classesToToggle.length; ++k){
-                                let cls = classesToToggle[k];
-                                let backupAttr = 'data-animation' + animationAtom.id.toString() + '-backup-class-' + cls;
-                                if(!noBackup && !node.hasAttribute(backupAttr)){
-                                    node.setAttribute(backupAttr, node.classList.contains(cls));
+                                backupClass(classesToToggle[k]);
+                                if(node.classList.contains(classesToToggle[k])){
+                                    node.classList.remove(classesToToggle[k]);
                                 }
-                                let initialBackupAttr = 'data-animation-initial-backup-class-' + cls;
-                                if(!noBackup && !node.hasAttribute(initialBackupAttr)){
-                                    node.setAttribute(initialBackupAttr, node.classList.contains(cls));
+                                else {
+                                    node.classList.add(classesToToggle[k]);
                                 }
-                                node.classList.remove(cls);
                             }
                         }
                         if(propertiesToAssign){
                             for(let k = 0; k < propertiesToAssign.length; ++k){
                                 let property = propertiesToAssign[k][0];
                                 let value = propertiesToAssign[k][1];
-                                if(property[0] == '*'){
+                                if(property[0] === '*'){
                                     property = property.slice(1);
                                     let backupAttr = 'data-animation' + animationAtom.id.toString() + '-backup-general-' + property;
                                     if(!noBackup && !node.hasAttribute(backupAttr)){
@@ -726,12 +653,12 @@
 
                 let animationObjectsUnfiltered = scope.querySelectorAll( animationAtom.objectQueryString );
                 let animationObjects = [];
-                for(let k = 0; k < animationObjectsUnfiltered.length; ++k){
-                    if(!animationObjectsUnfiltered[k].classList.contains('custom-animation-carrier') && animationObjectsUnfiltered[k].tagName.toLowerCase() != 'script'){
-                        animationObjects.push(animationObjectsUnfiltered[k]);
+                for(let j = 0; j < animationObjectsUnfiltered.length; ++j){
+                    if(!animationObjectsUnfiltered[j].classList.contains('custom-animation-carrier') && animationObjectsUnfiltered[j].tagName.toLowerCase() !== 'script'){
+                        animationObjects.push(animationObjectsUnfiltered[j]);
                     }
                 }
-                if(animationObjects.length == 0 && animationAtom.objectQueryString == '*'){
+                if(animationObjects.length === 0 && animationAtom.objectQueryString === '*'){
                     animationObjects = [scope];
                 }
 
@@ -754,10 +681,10 @@
 
                         for(let m = 0; m < classes.length; ++m) {
                             let cls = classes[m];
-                            if (node.getAttribute(backupAttrPrefix + 'class-' + cls) == 'false') {
+                            if (node.getAttribute(backupAttrPrefix + 'class-' + cls) === 'false') {
                                 node.classList.remove(cls);
                             }
-                            if (node.getAttribute(backupAttrPrefix + 'class-' + cls) == 'true') {
+                            if (node.getAttribute(backupAttrPrefix + 'class-' + cls) === 'true') {
                                 node.classList.add(cls);
                             }
                         }
@@ -765,7 +692,7 @@
                         if(animationAtom.propertiesToAssign){
                             for(let m = 0; m < animationAtom.propertiesToAssign.length; ++m){
                                 let property = animationAtom.propertiesToAssign[m][0];
-                                if(property[0] == '*'){
+                                if(property[0] === '*'){
                                     property = property.slice(1);
                                     if(node.hasAttribute(backupAttrPrefix + 'general-' + property)){
                                         node.setAttribute(property, node.getAttribute(backupAttrPrefix + 'general-' + property));
@@ -787,7 +714,7 @@
     }
 
     function getParentSlide(node){
-        while(node.tagName.toLowerCase() != 'section' && node.tagName.toLowerCase() != 'body'){
+        while(node.tagName.toLowerCase() !== 'section' && node.tagName.toLowerCase() !== 'body'){
             node = node.parentNode;
         }
         return node;
@@ -860,7 +787,7 @@
 
             for(let j = 0, lastAnimCarrier = animScriptDomElement; j < animScripts.length; ++j) {
                 let animationRawScript = animScripts[j];
-                if(j == 0 && animationRawScript.length > 0 && animationRawScript[0].content == 'initially'){
+                if(j === 0 && animationRawScript.length > 0 && animationRawScript[0].content === 'initially'){
                     let animationScript = parseAnimationRawScript(animationRawScript.slice(1));
                     let scope = animScriptDomElement.parentNode;
 
@@ -873,7 +800,7 @@
                 }
 
                 let animation = parseAnimationRawScript(animationRawScript);
-                if(fragment && j == 0){
+                if(fragment && j === 0){
                         fragment['data-custom-animation-carrier'] = animation;
                         lastAnimCarrier = fragment;
                 }
@@ -900,7 +827,7 @@
             if(initialSettings.length > 0){
                 function initializer(event){
                     for(let i = 0; i < initialSettings.length; ++i){
-                        if( event.currentSlide == initialSettings[i].slide ){
+                        if( event.currentSlide === initialSettings[i].slide ){
                             Reveal.navigateFragment(-1);
                             playAnimation(initialSettings[i].animation, initialSettings[i].scope, false);
                             break;

@@ -202,4 +202,6 @@ const RevealExternal = {
     }
 };
 
+// Reveal.registerPlugin( 'revealExternal', RevealExternal );
+
 // export default () => RevealExternal;

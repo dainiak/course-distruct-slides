@@ -3,14 +3,22 @@ const RevealMath = {
     init: (reveal) => {
         let options = reveal.getConfig().math || {};
         options = {
-            svgMathScale: options.svgMathScale || 0.0015,
-            svgMathFixedScale: !!(options.svgMathFixedScale),
-            svgMathEscapeClipping: !!(options.svgMathEscapeClipping),
-            mathjaxUrl: options.mathjaxUrl || 'https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-svg-full.js',
-            resetFragmentIndicesAfterTypeset: options.resetFragmentIndicesAfterTypeset !== false,
-            fragmentIndexCSS: options.fragmentIndexCSS !== false,
+            svg: {
+                enabled: (options.svg !== false) && (options.svg && options.svg.enabled !== false),
+                mathScale: options.svg && options.svg.mathScale || 0.0015,
+                fixedScale: options.svg && options.svg.fixedScale ? options.svg.fixedScale: false,
+                escapeClipping: !!(options.svg && options.svg.escapeClipping),
+                defaultAlignment: options.svg && options.svg.defaultAlignment || 'C'
+            },
+            fragments: {
+                enabled: (options.fragments && options.fragments.enabled) !== false,
+                resetIndicesAfterTypeset: (options.fragments && options.fragments.resetIndicesAfterTypeset) !== false,
+                cssIndices: (options.fragments && options.fragments.cssIndices) !== false,
+                maxFragments: options.fragments && options.fragments.maxFragments || 20
+            },
+            mathjaxUrl: options.mathjaxUrl || 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.min.js',
             macros: options.macros || {},
-            svgMathEnabled: !!(options.svgMathEnabled),
+            preamble: options.preamble || false,
         };
 
         window.MathJax = {
@@ -43,49 +51,6 @@ const RevealMath = {
                 inlineMath: [["\\(", "\\)"]],
                 displayMath: [["\\[", "\\]"]],
                 macros: {
-                    bbA: "{\\mathbb{A}}",
-                    bbB: "{\\mathbb{B}}",
-                    bbF: "{\\mathbb{F}}",
-                    bbN: "{\\mathbb{N}}",
-                    bbP: "{\\mathbb{P}}",
-                    bbQ: "{\\mathbb{Q}}",
-                    bbR: "{\\mathbb{R}}",
-                    bbZ: "{\\mathbb{Z}}",
-                    calA: "{\\mathcal{A}}",
-                    calB: "{\\mathcal{B}}",
-                    calC: "{\\mathcal{C}}",
-                    calD: "{\\mathcal{D}}",
-                    calF: "{\\mathcal{F}}",
-                    calG: "{\\mathcal{G}}",
-                    calI: "{\\mathcal{I}}",
-                    calM: "{\\mathcal{M}}",
-                    calN: "{\\mathcal{N}}",
-                    calO: "{\\mathcal{O}}",
-                    calR: "{\\mathcal{R}}",
-                    calS: "{\\mathcal{S}}",
-                    bfA: "{\\mathbf{A}}",
-                    bfa: "{\\mathbf{a}}",
-                    bfb: "{\\mathbf{b}}",
-                    bfc: "{\\mathbf{c}}",
-                    bfe: "{\\mathbf{e}}",
-                    bfw: "{\\mathbf{w}}",
-                    bfx: "{\\mathbf{x}}",
-                    bfy: "{\\mathbf{y}}",
-                    bfz: "{\\mathbf{z}}",
-                    floor: ["{\\left\\lfloor #1 \\right\\rfloor}", 1],
-                    ceil: ["{\\left\\lceil #1 \\right\\rceil}", 1],
-                    le: "\\leqslant",
-                    ge: "\\geqslant",
-                    hat: "\\widehat",
-                    emptyset: "\\varnothing",
-                    epsilon: "\\varepsilon",
-                    fragidx: ["\\class{fragment fragidx-#1}{#2}", 2],
-                    sfragidx: ["\\class{fragment fade-in-then-semi-out fragidx-#1}{#2}", 2],
-                    vfragidx: ["\\rlap{\\class{fragment fade-in-then-out fragidx-#1}{#2}}", 2],
-                    underbracket: ["\\mathop{\\underset{\\mmlToken{mo}{⎵}}{#2}}\\limits_{#1}", 2],
-                    next: ["\\class{fragment}{#1}", 1],
-                    step: ["\\class{fragment fade-in-then-semi-out}{#1}", 1],
-                    vstep: ["\\rlap{\\class{fragment fade-in-then-out}{#1}}", 1],
                     zoomable: ["\\class{zoomable}{#1}", 1],
                     green: ["\\class{green}{#1}", 1],
                     red: ["\\class{red}{#1}", 1]
@@ -95,6 +60,17 @@ const RevealMath = {
 
         Object.assign(window.MathJax.tex.macros, options.macros);
 
+        if(options.fragments.enabled){
+            Object.assign(window.MathJax.tex.macros, {
+                fragidx: ["\\class{fragment revealmathfragidx-#1}{#2}", 2],
+                sfragidx: ["\\class{fragment fade-in-then-semi-out revealmathfragidx-#1}{#2}", 2],
+                vfragidx: ["\\rlap{\\class{fragment fade-in-then-out revealmathfragidx-#1}{#2}}", 2],
+                next: ["\\class{fragment}{#1}", 1],
+                step: ["\\class{fragment fade-in-then-semi-out}{#1}", 1],
+                vstep: ["\\rlap{\\class{fragment fade-in-then-out}{#1}}", 1]
+            });
+        }
+
         function typesetMathInSVG() {
             function replaceText(textNode, svgMath, textNodeContainer, justification) {
                 let svgMathMetrics = {
@@ -102,18 +78,16 @@ const RevealMath = {
                     height: svgMath.viewBox.baseVal.height
                 };
 
-                let gnode = svgMath.querySelector('g').cloneNode(true);
-
                 let fontSize = textNode.getAttribute('font-size') || textNode.style.fontSize;
-                fontSize = fontSize ? +(fontSize.replace('px', '')) : "20";
+                fontSize = fontSize ? +(fontSize.replace('px', '')) : 20;
 
-                let scale = options.svgMathFixedScale || options.svgMathScale * fontSize;
+                let scale = options.svg.fixedScale || options.svg.mathScale * fontSize;
 
-                let x =  +textNode.getAttribute('x');
+                let x = +textNode.getAttribute('x');
                 if (textNode.hasAttribute('dx'))
                     x += textNode.getAttribute('dx');
 
-                let y =  +textNode.getAttribute('y');
+                let y = +textNode.getAttribute('y');
                 if (textNode.hasAttribute('dy'))
                     y += textNode.getAttribute('dy');
 
@@ -128,56 +102,63 @@ const RevealMath = {
                     default:  x1 = -svgMathMetrics.width * 0.5; break;
                 }
                 let y1 = 0;//-svgMathMetrics.height * 0.25;
+
+                let gnode = svgMath.querySelector('g').cloneNode(true);
                 gnode.setAttribute('transform', 'translate('+x0+' '+y0+')'
                     +' scale('+scale+') translate('+x1+' '+y1+')'
                     +' matrix(1 0 0 -1 0 0)');
 
-                let fill = textNode.getAttribute('fill') || textNode.style.fill || "rgb(0,0,0)";
-                let stroke = textNode.getAttribute('stroke') || textNode.style.stroke || "rgb(0,0,0)";
+                let defaultStyle = {
+                    'fill': '#000000',
+                    'stroke': '#000000',
+                    'fill-opacity': '1'
+                };
+                for(let property of ['fill', 'stroke', 'fill-opacity']){
+                    let value = textNode.getAttribute(property) || textNode.style.getPropertyValue(property) || defaultStyle[property];
+                    if(value){
+                        gnode.style.setProperty(property, value);
+                        for(let g of gnode.querySelectorAll('g,path')){
+                            g.style.setProperty(property, value);
+                        }
+                    }
+                }
 
-                if(fill)
-                    gnode.style.fill = fill;
-                if(stroke)
-                    gnode.style.stroke = stroke;
-
-                if (options.svgMathEscapeClipping)
+                if(options.svg.escapeClipping) {
                     textNode.parentNode.removeAttribute('clip-path');
+                }
                 textNode.parentNode.removeChild(textNode);
                 textNodeContainer.appendChild(gnode);
             }
 
             function typeset(textNode, textNodeContainer) {
-                let regexp = /^\s*([LCRlcr]?)\\\((.*)\\\)\s*$/;
-                let regexpDisplay = /^\s*([LCRlcr]?)\\\[(.*)\\]\s*$/;
+                let regexp = /^\s*([LCR]?)\\\((.*)\\\)\s*$/i;
+                let regexpDisplay = /^\s*([LCR]?)\\\[(.*)\\]\s*$/i;
                 let math = textNode.textContent.match(regexp);
                 let displayMath = textNode.textContent.match(regexpDisplay);
-                let display = false;
+                let isDisplay = false;
                 if(displayMath){
-                    display = true;
+                    isDisplay = true;
                     math = displayMath;
                 }
 
-                if (math) {
-                    let justification = math[1].toUpperCase();
-                    let mathmarkup = math[2];
-
+                if(math) {
+                    let textAlignment = math[1].toUpperCase() || options.svg.defaultAlignment;
+                    let mathMarkup = math[2];
                     let svg = MathJax.tex2svg(
-                        mathmarkup,
-                        {
-                            display: display
-                        }
+                        mathMarkup,
+                        MathJax.getMetricsFor(textNode, isDisplay)
                     ).querySelector('svg');
-                    replaceText(textNode, svg, textNodeContainer, justification);
+                    replaceText(textNode, svg, textNodeContainer, textAlignment);
                 }
             }
 
-            for(let text of document.querySelectorAll('svg > text')) {
+            for(let text of document.querySelectorAll('svg text')) {
                 let tspans = text.getElementsByTagName('tspan');
                 for(let tspan of tspans) {
                     for(let coord of ['x', 'y'])
                         if(!tspan.hasAttribute(coord))
                             tspan.setAttribute(coord, tspan.parentElement.getAttribute(coord));
-                    for(let attrName of ['font-size', 'stroke', 'fill']) {
+                    for(let attrName of ['font-size', 'stroke', 'fill', 'fill-opacity']) {
                         if(!(tspan.hasAttribute(attrName) || tspan.style.getPropertyValue(attrName))) {
                             tspan.style.setProperty(
                                 attrName,
@@ -185,7 +166,6 @@ const RevealMath = {
                            );
                         }
                     }
-
                     typeset(tspan, text.parentElement);
                 }
 
@@ -197,22 +177,34 @@ const RevealMath = {
 
 
         function typesetMath() {
-            if(options.svgMathEnabled) {
+            if(options.preamble){
+                let span = document.createElement('span');
+                span.style.display = 'none';
+                document.body.appendChild(span);
+                let script = document.querySelector(options.preamble);
+                span.innerText = script ? script.innerText : options.preamble;
+                MathJax.typeset([span]);
+                delete span;
+            }
+
+            MathJax.typeset();
+            if(options.svg.enabled) {
                 typesetMathInSVG();
             }
-            MathJax.typeset();
+
             for(let fragment of document.querySelectorAll( 'mjx-assistive-mml .fragment' ))
                 fragment.classList.remove('fragment')
 
-            if(options.resetFragmentIndicesAfterTypeset || options.fragmentIndexCSS) {
+            if(options.fragments.resetIndicesAfterTypeset || options.fragments.cssIndices) {
                 for(let slide of reveal.getSlides()){
-                    for(let fragment of slide.querySelectorAll('.fragment'))
-                        if (fragment.hasAttribute('data-fragment-index'))
-                            fragment.removeAttribute('data-fragment-index');
-
-                    for(let i = 0; i < 15; ++i) {
-                        let fragments = slide.querySelectorAll('.fragment.fragidx-' + i.toString());
-                        if(fragments.length === 0 && i >= 1)
+                    for(let i = 1; i < options.fragments.maxFragments; ++i) {
+                        let fragments = slide.querySelectorAll('.fragment.revealmathfragidx-' + i.toString() + ',.fragment.fragidx-' + i.toString());
+                        if(i === 1 && (fragments.length > 0 || options.fragments.resetIndicesAfterTypeset)){
+                            for(let fragment of slide.querySelectorAll('.fragment'))
+                                if (fragment.hasAttribute('data-fragment-index'))
+                                    fragment.removeAttribute('data-fragment-index');
+                        }
+                        if(fragments.length === 0)
                             break;
                         for(let fragment of fragments)
                             fragment.setAttribute('data-fragment-index', i);
@@ -232,5 +224,7 @@ const RevealMath = {
         return true;
     }
 };
+
+// Reveal.registerPlugin( 'revealMath', RevealMath );
 
 // export default () => RevealMath;

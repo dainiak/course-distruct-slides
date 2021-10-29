@@ -22,6 +22,10 @@
 
 <body>
 <div class="reveal"><div class="slides">
+    <section>
+        <svg data-external-replace="absolute_value_composition.svg"></svg>
+
+    </section>
     <section title="Титульный слайд" data-external="sect-title.html"></section>
     <section title="Конечные поля" data-external="sect-fields-defs.html"></section>
     <section title="Теорема Лагранжа о корнях многочленов" data-external="sect-lagrange-theorem.html"></section>
@@ -47,6 +51,12 @@
 <script src="../reveal-custom/plugins/inking/inking.js"></script>
 <script src="../reveal-custom/plugins/zoom-js-mod/zoom.js"></script>
 <script src="../reveal-custom/plugins/webcam/webcam.js"></script>
+
+<script type="text/latex" id="mathjaxPreamble">
+\[
+    \DeclareMathOperator{\roots}{roots}
+\]
+</script>
 
 
 <script>
@@ -84,17 +94,60 @@
             // sticky: true
         },
         math: {
-            svgMathEnabled: true,
+            svg: {
+                enabled: true,
+                mathScale: 0.001,
+                fixedScale: false,
+                escapeClipping: false,
+                defaultAlignment: 'C'
+            },
+            fragments: true,
+            preamble: "#mathjaxPreamble",
             macros: {
+                bbA: "{\\mathbb{A}}",
+                bbB: "{\\mathbb{B}}",
+                bbF: "{\\mathbb{F}}",
+                bbN: "{\\mathbb{N}}",
+                bbP: "{\\mathbb{P}}",
+                bbQ: "{\\mathbb{Q}}",
+                bbR: "{\\mathbb{R}}",
+                bbZ: "{\\mathbb{Z}}",
+                calA: "{\\mathcal{A}}",
+                calB: "{\\mathcal{B}}",
+                calC: "{\\mathcal{C}}",
+                calD: "{\\mathcal{D}}",
+                calF: "{\\mathcal{F}}",
+                calG: "{\\mathcal{G}}",
+                calI: "{\\mathcal{I}}",
+                calM: "{\\mathcal{M}}",
+                calN: "{\\mathcal{N}}",
+                calO: "{\\mathcal{O}}",
+                calR: "{\\mathcal{R}}",
+                calS: "{\\mathcal{S}}",
+                bfA: "{\\mathbf{A}}",
+                bfa: "{\\mathbf{a}}",
+                bfb: "{\\mathbf{b}}",
+                bfc: "{\\mathbf{c}}",
+                bfe: "{\\mathbf{e}}",
+                bfw: "{\\mathbf{w}}",
+                bfx: "{\\mathbf{x}}",
+                bfy: "{\\mathbf{y}}",
+                bfz: "{\\mathbf{z}}",
+                floor: ["{\\left\\lfloor #1 \\right\\rfloor}", 1],
+                ceil: ["{\\left\\lceil #1 \\right\\rceil}", 1],
+                le: "\\leqslant",
+                ge: "\\geqslant",
+                hat: "\\widehat",
+                emptyset: "\\varnothing",
+                epsilon: "\\varepsilon",
                 Fstar: "{\\mathbb{F}^*}",
-                divides: "{\\mathrel{\\vert}}",
+                divides: "{\\mathrel{\\,\\vert\\,}}",
                 notdivides: "{\\mathrel{\\,\u2224\\,}}",
                 ord: "\\operatorname{ord}",
-                roots: "\\operatorname{rootKs}",
+                // roots: "\\operatorname{roots}",
                 euler: "\\varphi",
                 card: ["\\lvert #1 \\rvert", 1],
                 GCD: "\\mathrm{GCD}",
-                // any: "\u25A7",
                 any: "\u25A3",
                 eqmod: ["\\overset{#1}{=}", 1],
                 neqmod: ["\\overset{\\scriptsize{#1}}{\\neq}", 1],
@@ -109,7 +162,7 @@
                 shadow: true,
                 color: 'ink',
                 displayStyle: true,
-                preamble: ''
+                preamble: '',
             },
             ink: {
                 color: ['green', 'red', 'blue', 'lightgrey']
