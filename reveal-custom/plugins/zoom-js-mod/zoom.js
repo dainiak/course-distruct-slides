@@ -137,17 +137,17 @@ const RevealZoom = {
 					target = event.target;
 					break;
 				}
-				if(target.classList.contains('MathJax')){
+				if(target.classList && target.classList.contains('MathJax')){
 					break;
 				}
-				if(target.classList.contains('smallest-zoomable') || target.hasAttribute('data-smallest-zoomable') || target.classList.contains('zoomable')){
+				if(target.classList && (target.classList.contains('smallest-zoomable') || target.classList.contains('zoomable')) || target.hasAttribute && target.hasAttribute('data-smallest-zoomable')){
 					break;
 				}
 
 				target = target.parentNode;
 			}
 
-			if(explicitZoomables && !target.classList.contains('smallest-zoomable') && !target.hasAttribute('data-smallest-zoomable') && !target.classList.contains('zoomable') && !target.hasAttribute('data-zoomable')){
+			if(!target || explicitZoomables && !target.classList.contains('smallest-zoomable') && !target.hasAttribute('data-smallest-zoomable') && !target.classList.contains('zoomable') && !target.hasAttribute('data-zoomable')){
 				return;
 			}
 

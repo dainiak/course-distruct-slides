@@ -18,6 +18,8 @@ const RevealMath = {
             },
             mathjaxUrl: options.mathjaxUrl || 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.min.js',
             macros: options.macros || {},
+            mathDelimiters: options.mathDelimiters || [["\\(", "\\)"]],
+            displayMathDelimiters: options.displayMathDelimiters || [["\\[", "\\]"]],
             preamble: options.preamble || false,
         };
 
@@ -48,12 +50,10 @@ const RevealMath = {
                 mtextInheritFont: (options.mtextInheritFont === true)
             },
             tex: {
-                inlineMath: [["\\(", "\\)"]],
-                displayMath: [["\\[", "\\]"]],
+                inlineMath: options.mathDelimiters,
+                displayMath: options.displayMathDelimiters,
                 macros: {
                     zoomable: ["\\class{zoomable}{#1}", 1],
-                    green: ["\\class{green}{#1}", 1],
-                    red: ["\\class{red}{#1}", 1]
                 }
             }
         };
