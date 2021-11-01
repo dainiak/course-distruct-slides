@@ -15,9 +15,10 @@ const RevealMath = {
             fragments: {
                 enabled: (options.fragments && options.fragments.enabled) !== false,
                 resetIndicesAfterTypeset: (options.fragments && options.fragments.resetIndicesAfterTypeset) !== false,
+                builtinTexMacros: (options.fragments && options.fragments.builtinTexMacros) !== false,
                 cssIndices: (options.fragments && options.fragments.cssIndices) !== false,
                 maxFragments: options.fragments && options.fragments.maxFragments || 20,
-                optimizeEnumeration: (options.fragments && options.fragments.optimizeEnumeration) !== false
+                indexClassPrefix: (options.fragments && options.fragments.indexClassPrefix) || 'fragidx-'
             },
             mathjaxUrl: options.mathjaxUrl || 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.min.js',
             macros: options.macros || {},
@@ -41,7 +42,7 @@ const RevealMath = {
             process: {
                 classesRegExp:options.process && options.process.classesRegExp || false
             },
-            preamble: options.preamble || false,
+            preamble: options.preamble || false
         };
 
         window.MathJax = {
@@ -80,11 +81,11 @@ const RevealMath = {
 
         Object.assign(window.MathJax.tex.macros, options.macros);
 
-        if(options.fragments.enabled){
+        if(options.fragments.enabled && options.fragments.builtinTexMacros){
             Object.assign(window.MathJax.tex.macros, {
-                fragidx: ["\\class{fragment revealmathfragidx-#1}{#2}", 2],
-                sfragidx: ["\\class{fragment fade-in-then-semi-out revealmathfragidx-#1}{#2}", 2],
-                vfragidx: ["\\rlap{\\class{fragment fade-in-then-out revealmathfragidx-#1}{#2}}", 2],
+                fragidx: ["\\class{fragment " + options.fragments.indexClassPrefix + "#1}{#2}", 2],
+                sfragidx: ["\\class{fragment fade-in-then-semi-out " + options.fragments.indexClassPrefix + "#1}{#2}", 2],
+                vfragidx: ["\\rlap{\\class{fragment fade-in-then-out " + options.fragments.indexClassPrefix + "#1}{#2}}", 2],
                 next: ["\\class{fragment}{#1}", 1],
                 step: ["\\class{fragment fade-in-then-semi-out}{#1}", 1],
                 vstep: ["\\rlap{\\class{fragment fade-in-then-out}{#1}}", 1]
@@ -144,11 +145,11 @@ const RevealMath = {
                         }
                     }
                 }
-                let id = textNode.getAttribute('id');
-                let classlist = textNode.getAttribute('classlist');
+                let id = textNode.id;
+                let classList = textNode.classList;
 
-                if(options.svg.inheritAttributes.includes('classlist') && classlist){
-                    for(let cssClass of classlist){
+                if((options.svg.inheritAttributes.includes('classlist') || options.svg.inheritAttributes.includes('classList')) && classList !== undefined){
+                    for(let cssClass of classList){
                         textNode.classList.add(cssClass)
                     }
                 }
@@ -158,10 +159,10 @@ const RevealMath = {
                 }
                 textNode.parentNode.removeChild(textNode);
                 if(options.svg.inheritAttributes.includes('id') && id){
-                    gnode.setAttribute('id', id);
+                    gnode.id = id;
                 }
 
-                textNodeContainer.appendChild(gnode);
+                textNodeContainer.insertBefore(gnode, textNode);
             }
 
             function typeset(textNode, textNodeContainer) {
@@ -194,10 +195,10 @@ const RevealMath = {
                             tspan.setAttribute(coord, tspan.parentElement.getAttribute(coord));
                     for(let attrName of ['font-size', 'stroke', 'fill', 'fill-opacity']) {
                         if(!(tspan.hasAttribute(attrName) || tspan.style.getPropertyValue(attrName))) {
-                            tspan.style.setProperty(
-                                attrName,
-                                tspan.parentElement.getAttribute(attrName) ||  tspan.parentElement.style.getPropertyValue(attrName)
-                           );
+                            let value = tspan.parentElement.style.getPropertyValue(attrName) || tspan.parentElement.getAttribute(attrName);
+                            if(value !== undefined && value !== null) {
+                                tspan.style.setProperty(attrName, value);
+                            }
                         }
                     }
                     typeset(tspan, text.parentElement);
@@ -211,8 +212,10 @@ const RevealMath = {
 
 
         function typesetMath() {
-            if(options.preamble){
-                let script = document.querySelector(options.preamble);
+            if(options.preamble && (typeof(options.preamble) === 'string' || options.preamble === true)){
+                let scriptSelector = options.preamble === true ? '' : options.preamble;
+                scriptSelector = (scriptSelector.startsWith('script') ? '' : 'script[type="text/latex"]') + scriptSelector;
+                let script = document.querySelector(scriptSelector);
                 let preamble = script ? script.innerText : options.preamble;
                 preamble = preamble.replace(/(?!\\)%.*$/mg, '');
                 MathJax.tex2svg(preamble);
@@ -226,10 +229,18 @@ const RevealMath = {
             for(let fragment of document.querySelectorAll( 'mjx-assistive-mml .fragment' ))
                 fragment.classList.remove('fragment')
 
-            if(options.fragments.resetIndicesAfterTypeset || options.fragments.cssIndices) {
+            if(options.fragments.enabled){
+                for(let node of document.querySelectorAll('.slides .auto-fragmentize')){
+                    for(let child of node.children) {
+                        child.classList.add('fragment');
+                    }
+                }
+            }
+
+            if(options.fragments.enabled && (options.fragments.resetIndicesAfterTypeset || options.fragments.cssIndices)) {
                 let cssQuery = '';
                 for(let i = 1; i < options.fragments.maxFragments; ++i){
-                    cssQuery += (cssQuery ? ',' : '') + '.fragment.revealmathfragidx-' + i.toString() + ',.fragment.fragidx-' + i.toString();
+                    cssQuery += (cssQuery ? ',' : '') + '.fragment.' + options.fragments.indexClassPrefix + i.toString();
                 }
 
                 for(let slide of reveal.getSlides()){
@@ -238,14 +249,11 @@ const RevealMath = {
                         for(let fragment of slide.querySelectorAll('.fragment[data-fragment-index]')) {
                             fragment.removeAttribute('data-fragment-index');
                             fragment.classList.remove('visible');
-
-                            if (numFragmentsWithCssIndex > 0)
-                                console.log(fragment);
                         }
                     }
 
                     for(let i = 1; numFragmentsWithCssIndex > 0; ++i) {
-                        let fragments = slide.querySelectorAll('.fragment.revealmathfragidx-' + i.toString() + ',.fragment.fragidx-' + i.toString());
+                        let fragments = slide.querySelectorAll('.fragment.' + options.fragments.indexClassPrefix + i.toString());
                         for(let fragment of fragments) {
                             fragment.setAttribute('data-fragment-index', i.toString());
                             numFragmentsWithCssIndex -= 1;
@@ -253,6 +261,7 @@ const RevealMath = {
                     }
                 }
             }
+
             reveal.layout();
         }
 

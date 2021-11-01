@@ -233,13 +233,11 @@ const RevealInking = {
             fabricObject.set({
                 lockScalingFlip: true,
                 centeredScaling: true,
-
                 hasBorders: true,
-                // borderColor: '#ff0000',
-
                 hasControls: true,
                 cornerStyle: 'circle', // or 'rect'
                 cornerSize: 10,
+                // borderColor: '#ff0000',
                 // cornerColor: 'rgba(0,255,0,0.2)',
                 // cornerStrokeColor: '#000000',
             });
@@ -990,10 +988,10 @@ const RevealInking = {
                     let xhr = new XMLHttpRequest();
                     let url = slide.dataset.inkingCanvasSrc;
 
-                    xhr.onreadystatechange = function( xhr, url, slide  ) {
+                    xhr.onreadystatechange = function(xhr, url, slide) {
 
                         return function() {
-                            if ( xhr.readyState !== 4 ) {
+                            if(xhr.readyState !== 4) {
                                 return;
                             }
                             if (!

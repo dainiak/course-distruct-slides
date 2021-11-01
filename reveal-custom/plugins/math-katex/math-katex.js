@@ -11,9 +11,10 @@ const RevealMath = {
 			fragments: {
 				enabled: (options.fragments && options.fragments.enabled) !== false,
 				resetIndicesAfterTypeset: (options.fragments && options.fragments.resetIndicesAfterTypeset) !== false,
+				builtinTexMacros: (options.fragments && options.fragments.builtinTexMacros) !== false,
 				cssIndices: (options.fragments && options.fragments.cssIndices) !== false,
 				maxFragments: options.fragments && options.fragments.maxFragments || 20,
-				optimizeReset: (options.fragments && options.fragments.optimizeReset) !== false
+				indexClassPrefix: (options.fragments && options.fragments.indexClassPrefix) || 'fragidx-'
 			},
 			delimiters: {
 				inline: options.delimiters && options.delimiters.inline || [["\\(", "\\)"]],
@@ -33,7 +34,7 @@ const RevealMath = {
 			},
 			mathjaxCompatibility: options.mathjaxCompatibility !== false,
 			macros: options.macros || {},
-			preamble: options.preamble || ''
+			preamble: options.preamble || false
 		};
 
 		let macros = {};
@@ -46,11 +47,11 @@ const RevealMath = {
 				macroName = '\\' + macroName;
 			macros[macroName] = macroDefinition;
 		}
-		if(options.fragments.enabled){
+		if(options.fragments.enabled && options.fragments.builtinTexMacros){
 			Object.assign(macros, {
-				"\\fragidx": "\\htmlClass{fragment fragidx-#1}{#2}",
-				"\\sfragidx": "\\htmlClass{fragment fade-in-then-semi-out fragidx-#1}{#2}",
-				"\\vfragidx": "\\rlap{\\htmlClass{fragment fade-in-then-out fragidx-#1}{#2}}",
+				"\\fragidx": "\\htmlClass{fragment " + options.fragments.indexClassPrefix + "#1}{#2}",
+				"\\sfragidx": "\\htmlClass{fragment fade-in-then-semi-out " + options.fragments.indexClassPrefix + "#1}{#2}",
+				"\\vfragidx": "\\rlap{\\htmlClass{fragment fade-in-then-out " + options.fragments.indexClassPrefix + "#1}{#2}}",
 				"\\next": "\\htmlClass{fragment}{#1}",
 				"\\step": "\\htmlClass{fragment fade-in-then-semi-out}{#1}",
 				"\\vstep": "\\rlap{\\htmlClass{fragment fade-in-then-out}{#1}}"
@@ -88,8 +89,10 @@ const RevealMath = {
 
 		function renderMath() {
 			window.addEventListener('load', function(){
-				if(options.preamble || options.mathjaxCompatibility){
-					let script = document.querySelector(options.preamble);
+				if(options.preamble && (typeof(options.preamble) === 'string' || options.preamble === true) || options.mathjaxCompatibility){
+					let scriptSelector = options.preamble === true ? '' : options.preamble;
+					scriptSelector = (scriptSelector.startsWith('script') ? '' : 'script[type="text/latex"]') + scriptSelector;
+					let script = document.querySelector(scriptSelector);
 					let preamble = script ? script.innerText : options.preamble;
 					preamble = preamble.replace(/(?!\\)%.*$/mg, '');
 
@@ -127,21 +130,35 @@ const RevealMath = {
 				}
 				window.renderMathInElement(reveal.getViewportElement(), renderOptions);
 
-				if(options.fragments.resetIndicesAfterTypeset || options.fragments.cssIndices) {
+				if(options.fragments.enabled){
+					for(let node of document.querySelectorAll('.slides .auto-fragmentize')){
+						for(let child of node.children) {
+							child.classList.add('fragment');
+						}
+					}
+				}
+
+				if(options.fragments.enabled && (options.fragments.resetIndicesAfterTypeset || options.fragments.cssIndices)) {
+					let cssQuery = '';
+					for(let i = 1; i < options.fragments.maxFragments; ++i){
+						cssQuery += (cssQuery ? ',' : '') + '.fragment.' + options.fragments.indexClassPrefix + i.toString();
+					}
+
 					for(let slide of reveal.getSlides()){
-						let resetDone = false;
-						for(let i = 1; i < options.fragments.maxFragments; ++i) {
-							let fragments = slide.querySelectorAll('.fragment.revealmathfragidx-' + i.toString() + ',.fragment.fragidx-' + i.toString());
-							if(!resetDone && (fragments.length > 0 || options.fragments.resetIndicesAfterTypeset)){
-								resetDone = true;
-								for(let fragment of slide.querySelectorAll('.fragment'))
-									if (fragment.hasAttribute('data-fragment-index'))
-										fragment.removeAttribute('data-fragment-index');
+						let numFragmentsWithCssIndex = slide.querySelectorAll(cssQuery).length;
+						if(numFragmentsWithCssIndex > 0 && options.fragments.cssIndices || options.fragments.resetIndicesAfterTypeset){
+							for(let fragment of slide.querySelectorAll('.fragment[data-fragment-index]')) {
+								fragment.removeAttribute('data-fragment-index');
+								fragment.classList.remove('visible');
 							}
-							if(fragments.length === 0 && options.fragments.optimizeEnumeration)
-								break;
-							for(let fragment of fragments)
-								fragment.setAttribute('data-fragment-index', i);
+						}
+
+						for(let i = 1; numFragmentsWithCssIndex > 0; ++i) {
+							let fragments = slide.querySelectorAll('.fragment.' + options.fragments.indexClassPrefix + i.toString());
+							for(let fragment of fragments) {
+								fragment.setAttribute('data-fragment-index', i.toString());
+								numFragmentsWithCssIndex -= 1;
+							}
 						}
 					}
 				}
