@@ -165,10 +165,10 @@ const RevealMath = {
                 textNodeContainer.insertBefore(gnode, textNode);
             }
 
-            function typeset(textNode, textNodeContainer) {
+            function tex2gnode(tex, textNodeContainer) {
                 let regexp = /^\s*([LCR]?)\\\((.*)\\\)\s*$/i;
                 let regexpDisplay = /^\s*([LCR]?)\\\[(.*)\\]\s*$/i;
-                let math = textNode.textContent.match(regexp);
+                let math = tex.match(regexp);
                 let displayMath = textNode.textContent.match(regexpDisplay);
                 let isDisplay = false;
                 if(displayMath){
