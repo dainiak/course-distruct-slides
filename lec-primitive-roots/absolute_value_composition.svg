@@ -5,45 +5,73 @@
    height="996"
    viewBox="-30 -42 64 84"
    version="1.1"
+   id="svg39"
+   sodipodi:docname="absolute_value_composition.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"><sodipodi:namedview
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   id="defs41" /><sodipodi:namedview
    pagecolor="#ffffff"
    bordercolor="#666666"
-   borderopacity="1.0"/>
+   borderopacity="1.0"
+   id="namedview2"
+   inkscape:pageshadow="2"
+   inkscape:pageopacity="0.0"
+   inkscape:pagecheckerboard="0"
+   showgrid="false"
+   inkscape:zoom="0.87650602"
+   inkscape:cx="383.91065"
+   inkscape:cy="498"
+   inkscape:window-width="2560"
+   inkscape:window-height="1351"
+   inkscape:window-x="-9"
+   inkscape:window-y="-9"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="svg39" />
 
 <g
    style="fill:#999999;stroke:#999999"
-   transform="matrix(1,0,0,0.99274443,0,0.30473374)"><g
-     style="fill:#999999;stroke:#999999"><line
+   transform="matrix(1,0,0,0.99274443,0,0.30473374)"
+   id="g15"><g
+     style="fill:#999999;stroke:#999999"
+     id="g8"><line
        style="fill:#999999;stroke:#999999;stroke-opacity:1;image-rendering:auto; stroke-width:0.6px"
        x1="-30"
        y1="0"
        x2="32"
-       y2="0"/><polygon
+       y2="0"
+       id="line4" /><polygon
        style="fill:#999999;stroke:#999999;image-rendering:auto"
-       points="30,-1 33,0 30,1 " /></g><g
+       points="30,-1 33,0 30,1 "
+       id="polygon6" /></g><g
      id="g1122"
      style="fill:#999999;stroke:#999999; stroke-width:0.6px"><line
        x1="0"
        y1="42"
        x2="0"
        y2="-40"
-       style="fill:#999999;stroke:#999999" /><polygon
+       style="fill:#999999;stroke:#999999"
+       id="line10" /><polygon
        points="-1,-38 0,-41 1,-38 "
-       style="fill:#999999;stroke:#999999" /></g></g>
+       style="fill:#999999;stroke:#999999"
+       id="polygon12" /></g></g>
 
 <path
    style="fill:none; stroke:#CC00FF; stroke-width:1px"
-   d="m -30,36 c 10,-100 20,25 30,0 12,30 24,-156 36,90" />
+   d="m -30,36 c 10,-100 20,25 30,0 12,30 24,-156 36,90"
+   id="path17" />
 
 <path
    style="fill:none; stroke:#00DDDD; stroke-opacity:0.6; stroke-width:1px}"
-   d="m -12,-90 c 2,41 4,70 6,90 8,-80 16,-16 24,0 2,-4 4,-5 6,0 4,-10 8,-44 12,-126" />
+   d="m -12,-90 c 2,41 4,70 6,90 8,-80 16,-16 24,0 2,-4 4,-5 6,0 4,-10 8,-44 12,-126"
+   id="path19" />
 
 <path
    d="M -12,-90 C 4,238 20,-202 36,126"
-   style="fill:none;stroke-width:0.19996386;stroke-miterlimit:4;stroke-dasharray:none;stroke:#ffff00" />
+   style="fill:none;stroke-width:0.19996386;stroke-miterlimit:4;stroke-dasharray:none;stroke:#ffff00"
+   id="path21" />
 
  
 
@@ -65,26 +93,24 @@
    id="text4657-9"><tspan
      style="fill:#cc00ff;fill-opacity:1;stroke-width:0.0843374"
      x="-21.044327"
-     y="-4.4617629">\(f(x)\)</tspan></text><text
+     y="-4.4617629"
+     id="tspan25">\(f(x)\)</tspan></text><text
    xml:space="preserve"
    style="font-style:normal;font-weight:normal;font-size:3.37349px;line-height:1.25;font-family:sans-serif;fill:#00dede;fill-opacity:0.6;stroke:none;stroke-width:0.08433735;stroke-miterlimit:4;stroke-dasharray:none"
    x="12.029474"
-   y="-20.09696"><tspan
+   y="-20.09696"
+   id="text30"><tspan
      style="fill:#00dede;fill-opacity:0.6;stroke-width:0.08433735;stroke-miterlimit:4;stroke-dasharray:none"
      x="12.029474"
-     y="-20.09696">L\(f(x)\)</tspan></text><text
+     y="-20.09696"
+     id="tspan28">L\(f(x)\)</tspan></text><text
    xml:space="preserve"
    style="font-style:normal;font-weight:normal;font-size:1.1245px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.0843374"
    x="-28.942244"
-   y="41.134018"><tspan
-     style="font-size:1.1245px;stroke-width:0.0843374"
-     x="-28.942244"
-     y="41.134018">Source: https://mathresearch.utsa.edu/wiki/index.php?title=File:Absolute_value_composition.svg</tspan></text><text
+   y="41.134018"
+   id="text34">Source: https://mathresearch.utsa.edu/wiki/index.php?title=File:Absolute_value_composition.svg</text><text
    xml:space="preserve"
    style="font-style:normal;font-weight:normal;font-size:4.49799197px;line-height:1.25;font-family:sans-serif;fill:#00cc00;fill-opacity:1;stroke:none;stroke-width:0.0843374"
    x="29.598333"
    y="-2.1154208"
-   id="text5424"><tspan
-     style="fill:#00cc00;fill-opacity:1;stroke-width:0.0843374;font-size:4.49799197px"
-     x="29.598333"
-     y="-2.1154208">C\(x\)</tspan></text></svg>
+   id="text5424">C\(x\)</text></svg>

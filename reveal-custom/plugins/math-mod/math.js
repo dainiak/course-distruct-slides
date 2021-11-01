@@ -9,6 +9,7 @@ const RevealMath = {
                 fixedScale: options.svg && options.svg.fixedScale ? options.svg.fixedScale: false,
                 escapeClipping: !!(options.svg && options.svg.escapeClipping),
                 defaultAlignment: options.svg && options.svg.defaultAlignment || 'C',
+                defaultVerticalAlignment: options.svg && options.svg.defaultVerticalAlignment || 'B',
                 inheritAttributes: options.svg && options.svg.inheritAttributes || ['fill', 'stroke', 'fill-opacity', 'id', 'classlist'],
                 inheritRecursively: options.svg && options.svg.inheritRecursively || false
             },
@@ -93,119 +94,154 @@ const RevealMath = {
         }
 
         function typesetMathInSVG() {
-            function replaceText(textNode, svgMath, textNodeContainer, justification) {
-                let svgMathMetrics = {
-                    width: svgMath.viewBox.baseVal.width,
-                    height: svgMath.viewBox.baseVal.height
+            function getTargetProperties(node){
+                let properties = {
+                    id: null,
+                    classList: [],
+                    x: 0,
+                    y: 0,
+                    fontSize: 20,
+                    style: {}
                 };
-
-                let fontSize = textNode.getAttribute('font-size') || textNode.style.fontSize;
-                fontSize = fontSize ? +(fontSize.replace('px', '')) : 20;
-
-                let scale = options.svg.fixedScale || options.svg.mathScale * fontSize;
-
-                let x = +textNode.getAttribute('x');
-                if (textNode.hasAttribute('dx'))
-                    x += textNode.getAttribute('dx');
-
-                let y = +textNode.getAttribute('y');
-                if (textNode.hasAttribute('dy'))
-                    y += textNode.getAttribute('dy');
-
-                let x0 = x;
-                let y0 = y;
-                let x1;
-
-                justification = justification || 'L';
-                switch(justification) {
-                    case 'L': x1 = 0; break;
-                    case 'R': x1 = -svgMathMetrics.width; break;
-                    default:  x1 = -svgMathMetrics.width * 0.5; break;
+                for(let coord of ['x', 'y']) {
+                    let t = node;
+                    properties[coord] = 0;
+                    while (!t.hasAttribute(coord)) {
+                        if (t.hasAttribute('d'+coord))
+                            properties.x += +t.getAttribute('d'+coord);
+                        t = t.parentNode;
+                    }
+                    properties[coord] += +t.getAttribute(coord);
                 }
-                let y1 = 0;//-svgMathMetrics.height * 0.25;
 
-                let gnode = svgMath.querySelector('g').cloneNode(true);
-                gnode.setAttribute('transform', 'translate('+x0+' '+y0+')'
-                    +' scale('+scale+') translate('+x1+' '+y1+')'
-                    +' matrix(1 0 0 -1 0 0)');
+                let t = node;
+                while (!t.style.getPropertyValue('font-size') && t.parentNode && ['text', 'tspan'].includes(t.parentNode.tagName)) {
+                    t = t.parentNode;
+                }
+                let fontSize = t.style.getPropertyValue('font-size');
+                properties.fontSize = fontSize ? +(fontSize.replace('px', '')) : 20
 
                 let defaultStyle = {
                     'fill': '#000000',
                     'stroke': '#000000',
                     'fill-opacity': '1'
                 };
+
                 for(let property of options.svg.inheritAttributes){
-                    let value = textNode.getAttribute(property) || textNode.style.getPropertyValue(property) || defaultStyle[property];
-                    if(value){
-                        gnode.style.setProperty(property, value);
-                        if(options.svg.inheritRecursively) {
-                            for (let g of gnode.querySelectorAll('g,path')) {
-                                g.style.setProperty(property, value);
-                            }
-                        }
+                    t = node;
+                    while (!t.style.getPropertyValue(property) && t.parentNode && ['text', 'tspan'].includes(t.parentNode.tagName)) {
+                        t = t.parentNode;
+                    }
+
+                    let value = t.style.getPropertyValue(property) || defaultStyle[property];
+                    if(value !== '' && value !== undefined){
+                        properties.style[property] = value;
                     }
                 }
-                let id = textNode.id;
-                let classList = textNode.classList;
 
-                if((options.svg.inheritAttributes.includes('classlist') || options.svg.inheritAttributes.includes('classList')) && classList !== undefined){
+                let classList = Array.from(t.classList);
+                if(classList !== undefined && (options.svg.inheritAttributes.includes('classlist') || options.svg.inheritAttributes.includes('classList'))){
                     for(let cssClass of classList){
                         textNode.classList.add(cssClass)
                     }
                 }
 
-                if(options.svg.escapeClipping) {
-                    textNode.parentNode.removeAttribute('clip-path');
+                t = node;
+                while (!t.hasAttribute('id') && t.parentNode && ['text', 'tspan'].includes(t.parentNode.tagName)) {
+                    t = t.parentNode;
                 }
-                textNode.parentNode.removeChild(textNode);
-                if(options.svg.inheritAttributes.includes('id') && id){
-                    gnode.id = id;
+                if(t && t.hasAttribute('id')){
+                    properties.id = t.getAttribute('id');
                 }
-
-                textNodeContainer.insertBefore(gnode, textNode);
             }
 
-            function tex2gnode(tex, textNodeContainer) {
-                let regexp = /^\s*([LCR]?)\\\((.*)\\\)\s*$/i;
-                let regexpDisplay = /^\s*([LCR]?)\\\[(.*)\\]\s*$/i;
-                let math = tex.match(regexp);
-                let displayMath = textNode.textContent.match(regexpDisplay);
+            function processNode(textContent, targetProperties) {
+                let regexpInline = /^\s*([LCRBMT]{0,2})\s*\\\((.*)\\\)\s*$/i;
+                let regexpDisplay = /^\s*([LCRBMT]{0,2})\s*\\\[(.*)\\]\s*$/i;
+                let math = textContent.match(regexpInline);
+                let displayMath = textContent.match(regexpDisplay);
                 let isDisplay = false;
                 if(displayMath){
                     isDisplay = true;
                     math = displayMath;
                 }
-
-                if(math) {
-                    let textAlignment = math[1].toUpperCase() || options.svg.defaultAlignment;
-                    let mathMarkup = math[2];
-                    let svg = MathJax.tex2svg(
-                        mathMarkup,
-                        MathJax.getMetricsFor(textNode, isDisplay)
-                    ).querySelector('svg');
-                    replaceText(textNode, svg, textNodeContainer, textAlignment);
+                if(!math) {
+                    return null;
                 }
-            }
 
-            for(let text of document.querySelectorAll('svg text')) {
-                let tspans = text.getElementsByTagName('tspan');
-                for(let tspan of tspans) {
-                    for(let coord of ['x', 'y'])
-                        if(!tspan.hasAttribute(coord))
-                            tspan.setAttribute(coord, tspan.parentElement.getAttribute(coord));
-                    for(let attrName of ['font-size', 'stroke', 'fill', 'fill-opacity']) {
-                        if(!(tspan.hasAttribute(attrName) || tspan.style.getPropertyValue(attrName))) {
-                            let value = tspan.parentElement.style.getPropertyValue(attrName) || tspan.parentElement.getAttribute(attrName);
-                            if(value !== undefined && value !== null) {
-                                tspan.style.setProperty(attrName, value);
+                let hAlignment = (math[1].match(/[LCR]/i) || options.svg.defaultAlignment || 'L')[0].toUpperCase();
+                let vAlignment = (math[1].match(/[BMT]/i) || options.svg.defaultVerticalAlignment || 'B')[0].toUpperCase();
+                let mathMarkup = math[2];
+                let svgMath = MathJax.tex2svg(
+                    mathMarkup,
+                    MathJax.getMetricsFor(textNode, isDisplay)
+                );
+
+                if(!svgMath){
+                    return null;
+                }
+                svgMath = svgMath.querySelector('svg');
+
+                let scale = options.svg.fixedScale || options.svg.mathScale * targetProperties.fontSize;
+
+                let x0 = targetProperties.x;
+                let y0 = targetProperties.y;
+                let x1 = (hAlignment === 'L' ? 0 : -svgMath.viewBox.baseVal.width) * (hAlignment === 'C' ? 0.5 : 1);
+                let y1 = (hAlignment === 'B' ? 0 : -svgMath.viewBox.baseVal.height) * (vAlignment === 'M' ? 0.5 : 1);
+
+                let gNode = svgMath.querySelector('g').cloneNode(true);
+                gNode.setAttribute(
+                    'transform',
+                    'translate('+x0+' '+y0+')' + ' scale('+scale+') translate('+x1+' '+y1+')' + ' matrix(1 0 0 -1 0 0)'
+                );
+
+                for(let property in targetProperties.style){
+                    let value = targetProperties.style[property];
+                    if(value){
+                        gNode.style.setProperty(property, value);
+                        if(options.svg.inheritRecursively) {
+                            for (let g of gNode.querySelectorAll('g,path')) {
+                                g.style.setProperty(property, value);
                             }
                         }
                     }
-                    typeset(tspan, text.parentElement);
                 }
 
-                if(tspans.length === 0) {
-                    typeset(text, text.parentElement);
+                for(let cssClass of targetProperties.classList){
+                    gNode.classList.add(cssClass);
+                }
+                if(targetProperties.id){
+                    gNode.id = id;
+                }
+
+                return gNode;
+            }
+
+            for(let textNode of document.querySelectorAll('svg text')) {
+                let tspanNodes = textNode.getElementsByTagName('tspan');
+                for(let tspanNode of tspanNodes) {
+                    for(let coord of ['x', 'y'])
+                        if(!tspanNode.hasAttribute(coord))
+                            tspanNode.setAttribute(coord, tspanNode.parentElement.getAttribute(coord));
+                    for(let attrName of ['font-size', 'stroke', 'fill', 'fill-opacity']) {
+                        if(!(tspanNode.hasAttribute(attrName) || tspanNode.style.getPropertyValue(attrName))) {
+                            let value = tspanNode.parentElement.style.getPropertyValue(attrName) || tspanNode.parentElement.getAttribute(attrName);
+                            if(value !== undefined && value !== null) {
+                                tspanNode.style.setProperty(attrName, value);
+                            }
+                        }
+                    }
+                    processNode(tspanNode, textNode.parentElement);
+                    if(options.svg.escapeClipping) {
+                        tspanNode.parentNode.removeAttribute('clip-path');
+                    }
+                }
+
+                if(tspanNodes.length === 0) {
+                    processNode(textNode, textNode.parentElement);
+                    if(options.svg.escapeClipping) {
+                        textNode.parentNode.removeAttribute('clip-path');
+                    }
                 }
             }
         }
