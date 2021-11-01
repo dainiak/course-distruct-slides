@@ -48,12 +48,13 @@
 
 
 <script src="../reveal-custom/plugins/math-mod/math.js"></script>
+<!--<script src="../reveal-custom/plugins/math-katex/math-katex.js"></script>-->
+
 <script src="../reveal-custom/plugins/inking/inking.js"></script>
 <script src="../reveal-custom/plugins/zoom-js-mod/zoom.js"></script>
 <script src="../reveal-custom/plugins/webcam/webcam.js"></script>
 
 <script type="text/latex" id="mathjaxPreamble">
-\[
     \DeclareMathOperator{\roots}{roots}
     \DeclareMathOperator{\ord}{ord}
     \DeclareMathOperator{\GCD}{GCD}
@@ -86,14 +87,13 @@
     \newcommand{\bfx}{\mathbf{x}}
     \newcommand{\bfy}{\mathbf{y}}
     \newcommand{\bfz}{\mathbf{z}}
-    \newcommand{\emptyset}{\varnothing}
-    \newcommand{\epsilon}{\varepsilon}
+    \renewcommand{\emptyset}{\varnothing}
+    \renewcommand{\epsilon}{\varepsilon}
     \newcommand{\Fstar}{\mathbb{F}^*}
     \newcommand{\euler}{\varphi}
     \newcommand{\card}[1]{\lvert #1 \rvert}
     \newcommand{\eqmod}[1]{\overset{#1}{=}}
     \newcommand{\neqmod}[1]{\overset{\scriptsize{#1}}{\neq}}
-\]
 </script>
 
 
@@ -142,6 +142,7 @@
             fragments: true,
             preamble: "#mathjaxPreamble",
             macros: {
+                zoomable: ["\\class{zoomable}{#1}", 1],
                 floor: ["{\\left\\lfloor #1 \\right\\rfloor}", 1],
                 ceil: ["{\\left\\lceil #1 \\right\\rceil}", 1],
                 le: "\\leqslant",

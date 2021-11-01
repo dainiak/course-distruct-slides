@@ -8,18 +8,39 @@ const RevealMath = {
                 mathScale: options.svg && options.svg.mathScale || 0.0015,
                 fixedScale: options.svg && options.svg.fixedScale ? options.svg.fixedScale: false,
                 escapeClipping: !!(options.svg && options.svg.escapeClipping),
-                defaultAlignment: options.svg && options.svg.defaultAlignment || 'C'
+                defaultAlignment: options.svg && options.svg.defaultAlignment || 'C',
+                inheritAttributes: options.svg && options.svg.inheritAttributes || ['fill', 'stroke', 'fill-opacity', 'id', 'classlist'],
+                inheritRecursively: options.svg && options.svg.inheritRecursively || false
             },
             fragments: {
                 enabled: (options.fragments && options.fragments.enabled) !== false,
                 resetIndicesAfterTypeset: (options.fragments && options.fragments.resetIndicesAfterTypeset) !== false,
                 cssIndices: (options.fragments && options.fragments.cssIndices) !== false,
-                maxFragments: options.fragments && options.fragments.maxFragments || 20
+                maxFragments: options.fragments && options.fragments.maxFragments || 20,
+                optimizeEnumeration: (options.fragments && options.fragments.optimizeEnumeration) !== false
             },
             mathjaxUrl: options.mathjaxUrl || 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-svg-full.min.js',
             macros: options.macros || {},
-            mathDelimiters: options.mathDelimiters || [["\\(", "\\)"]],
-            displayMathDelimiters: options.displayMathDelimiters || [["\\[", "\\]"]],
+            delimiters: {
+                inline: options.delimiters && options.delimiters.inline || [["\\(", "\\)"]],
+                display: options.delimiters && options.delimiters.display || [["\\[", "\\]"]],
+            },
+            ignore: {
+                tags: options.ignore && options.ignore.tags || [
+                    "svg",
+                    "script",
+                    "noscript",
+                    "style",
+                    "textarea",
+                    "pre",
+                    "code"
+                ],
+                classes: options.ignore && options.ignore.classes || false,
+                classesRegExp: options.ignore && options.ignore.classesRegExp || false
+            },
+            process: {
+                classesRegExp:options.process && options.process.classesRegExp || false
+            },
             preamble: options.preamble || false,
         };
 
@@ -28,15 +49,7 @@ const RevealMath = {
                 renderActions: {
                     addMenu: [0, '', '']
                 },
-                skipHtmlTags: [
-                    "svg",
-                    "script",
-                    "noscript",
-                    "style",
-                    "textarea",
-                    "pre",
-                    "code"
-                ]
+                skipHtmlTags: options.ignore.tags
             },
             startup: {
                 typeset: false,
@@ -50,13 +63,20 @@ const RevealMath = {
                 mtextInheritFont: (options.mtextInheritFont === true)
             },
             tex: {
-                inlineMath: options.mathDelimiters,
-                displayMath: options.displayMathDelimiters,
-                macros: {
-                    zoomable: ["\\class{zoomable}{#1}", 1],
-                }
+                inlineMath: options.delimiters.inline,
+                displayMath: options.delimiters.display,
+                macros: {}
             }
         };
+
+        if(options.ignore.classes){
+            let regexp = options.ignore.classes.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+            options.ignore.classesRegExp = options.ignore.classesRegExp ? ('(' + options.ignore.classesRegExp + ')|' + regexp) : regexp;
+        }
+        if(options.ignore.classesRegExp)
+            window.mathjax.options.ignoreHtmlClass = options.ignore.classesRegExp;
+        if(options.process.classesRegExp)
+            window.mathjax.options.processHtmlClass = options.process.classesRegExp;
 
         Object.assign(window.MathJax.tex.macros, options.macros);
 
@@ -113,13 +133,23 @@ const RevealMath = {
                     'stroke': '#000000',
                     'fill-opacity': '1'
                 };
-                for(let property of ['fill', 'stroke', 'fill-opacity']){
+                for(let property of options.svg.inheritAttributes){
                     let value = textNode.getAttribute(property) || textNode.style.getPropertyValue(property) || defaultStyle[property];
                     if(value){
                         gnode.style.setProperty(property, value);
-                        for(let g of gnode.querySelectorAll('g,path')){
-                            g.style.setProperty(property, value);
+                        if(options.svg.inheritRecursively) {
+                            for (let g of gnode.querySelectorAll('g,path')) {
+                                g.style.setProperty(property, value);
+                            }
                         }
+                    }
+                }
+                let id = textNode.getAttribute('id');
+                let classlist = textNode.getAttribute('classlist');
+
+                if(options.svg.inheritAttributes.includes('classlist') && classlist){
+                    for(let cssClass of classlist){
+                        textNode.classList.add(cssClass)
                     }
                 }
 
@@ -127,6 +157,10 @@ const RevealMath = {
                     textNode.parentNode.removeAttribute('clip-path');
                 }
                 textNode.parentNode.removeChild(textNode);
+                if(options.svg.inheritAttributes.includes('id') && id){
+                    gnode.setAttribute('id', id);
+                }
+
                 textNodeContainer.appendChild(gnode);
             }
 
@@ -178,13 +212,10 @@ const RevealMath = {
 
         function typesetMath() {
             if(options.preamble){
-                let span = document.createElement('span');
-                span.style.display = 'none';
-                document.body.appendChild(span);
                 let script = document.querySelector(options.preamble);
-                span.innerText = script ? script.innerText : options.preamble;
-                MathJax.typeset([span]);
-                delete span;
+                let preamble = script ? script.innerText : options.preamble;
+                preamble = preamble.replace(/(?!\\)%.*$/mg, '');
+                MathJax.tex2svg(preamble);
             }
 
             MathJax.typeset();
@@ -196,18 +227,29 @@ const RevealMath = {
                 fragment.classList.remove('fragment')
 
             if(options.fragments.resetIndicesAfterTypeset || options.fragments.cssIndices) {
+                let cssQuery = '';
+                for(let i = 1; i < options.fragments.maxFragments; ++i){
+                    cssQuery += (cssQuery ? ',' : '') + '.fragment.revealmathfragidx-' + i.toString() + ',.fragment.fragidx-' + i.toString();
+                }
+
                 for(let slide of reveal.getSlides()){
-                    for(let i = 1; i < options.fragments.maxFragments; ++i) {
-                        let fragments = slide.querySelectorAll('.fragment.revealmathfragidx-' + i.toString() + ',.fragment.fragidx-' + i.toString());
-                        if(i === 1 && (fragments.length > 0 || options.fragments.resetIndicesAfterTypeset)){
-                            for(let fragment of slide.querySelectorAll('.fragment'))
-                                if (fragment.hasAttribute('data-fragment-index'))
-                                    fragment.removeAttribute('data-fragment-index');
+                    let numFragmentsWithCssIndex = slide.querySelectorAll(cssQuery).length;
+                    if(numFragmentsWithCssIndex > 0 && options.fragments.cssIndices || options.fragments.resetIndicesAfterTypeset){
+                        for(let fragment of slide.querySelectorAll('.fragment[data-fragment-index]')) {
+                            fragment.removeAttribute('data-fragment-index');
+                            fragment.classList.remove('visible');
+
+                            if (numFragmentsWithCssIndex > 0)
+                                console.log(fragment);
                         }
-                        if(fragments.length === 0)
-                            break;
-                        for(let fragment of fragments)
-                            fragment.setAttribute('data-fragment-index', i);
+                    }
+
+                    for(let i = 1; numFragmentsWithCssIndex > 0; ++i) {
+                        let fragments = slide.querySelectorAll('.fragment.revealmathfragidx-' + i.toString() + ',.fragment.fragidx-' + i.toString());
+                        for(let fragment of fragments) {
+                            fragment.setAttribute('data-fragment-index', i.toString());
+                            numFragmentsWithCssIndex -= 1;
+                        }
                     }
                 }
             }

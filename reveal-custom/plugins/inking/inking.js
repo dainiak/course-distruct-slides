@@ -229,8 +229,8 @@ const RevealInking = {
             }
         }
 
-        function setCanvasObjectDefaults(obj){
-            obj.set({
+        function setCanvasObjectDefaults(fabricObject){
+            fabricObject.set({
                 lockScalingFlip: true,
                 centeredScaling: true,
 
@@ -244,7 +244,7 @@ const RevealInking = {
                 // cornerStrokeColor: '#000000',
             });
 
-            obj.setControlsVisibility({
+            fabricObject.setControlsVisibility({
                 mtr: false,
                 mt: false,
                 mb: false,
@@ -253,11 +253,11 @@ const RevealInking = {
             });
         }
 
-        function setMathImageDefaults(obj) {
-            setCanvasObjectDefaults(obj);
+        function setMathImageDefaults(fabricObject) {
+            setCanvasObjectDefaults(fabricObject);
 
             if (options.math.shadow) {
-                obj.set({
+                fabricObject.set({
                     'shadow': new window.fabric.Shadow({
                         blur: 10,
                         offsetX: 1,
@@ -267,12 +267,12 @@ const RevealInking = {
                 });
             }
 
-            obj.set({
+            fabricObject.set({
                 lockScalingFlip: true,
                 hasBorders: true,
                 centeredScaling: true
             });
-            obj.setControlsVisibility({
+            fabricObject.setControlsVisibility({
                 mtr: false,
                 mt: false,
                 mb: false,
@@ -450,7 +450,7 @@ const RevealInking = {
         function addMathImageEventListeners(img){
             let mathColor = img.mathMetadata.color;
             img.on('selected', function () {
-                if(canvas.getActiveObject() == img) {
+                if(canvas.getActiveObject() === img) {
                     currentMathImage = img;
                     if(mathColor) {
                         document.querySelector('.ink-formula').style.textShadow = '0 0 10px ' + mathColor;
@@ -473,7 +473,7 @@ const RevealInking = {
             let targetScaleX = null;
             let targetScaleY = null;
 
-            if(currentMathImage && canvas.getActiveObject() == currentMathImage){
+            if(currentMathImage && canvas.getActiveObject() === currentMathImage){
                 targetLeft = currentMathImage.left;
                 targetTop = currentMathImage.top;
                 targetAngle = currentMathImage.angle;
@@ -1027,7 +1027,7 @@ const RevealInking = {
             }
         }
 
-        function loadScript( params, extraCallback ) {
+        function loadScript(params, extraCallback) {
             if(params.condition !== undefined
                 && !(params.condition === true || typeof params.condition == 'function' && params.condition.call())) {
                 return extraCallback ? extraCallback.call() : false;

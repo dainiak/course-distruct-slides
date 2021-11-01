@@ -1,124 +1,151 @@
-const RevealKatex = {
+const RevealMath = {
 	id: 'math',
 	init: (reveal) => {
 		let options = reveal.getConfig().math || {};
 		options = {
-			katexUrl: options.katexUrl || 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.18/katex.min.js',
-			autorenderUrl: options.autorenderUrl || 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.18/contrib/auto-render.min.js',
-			katexCssUrl: options.katexCssUrl || 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.18/katex.min.css',
-			resetFragmentIndicesAfterTypeset: options.resetFragmentIndicesAfterTypeset !== false,
-			fragmentIndexCSS: options.fragmentIndexCSS !== false,
-			macros: options.macros || {}
+			urls: {
+				katex: options.urls && options.urls.katex || 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.15.0/katex.min.js',
+				css: options.urls && options.urls.css || 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.15.0/katex.min.css',
+				autorender: options.urls && options.urls.autorender || 'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.15.0/contrib/auto-render.min.js'
+			},
+			fragments: {
+				enabled: (options.fragments && options.fragments.enabled) !== false,
+				resetIndicesAfterTypeset: (options.fragments && options.fragments.resetIndicesAfterTypeset) !== false,
+				cssIndices: (options.fragments && options.fragments.cssIndices) !== false,
+				maxFragments: options.fragments && options.fragments.maxFragments || 20,
+				optimizeReset: (options.fragments && options.fragments.optimizeReset) !== false
+			},
+			delimiters: {
+				inline: options.delimiters && options.delimiters.inline || [["\\(", "\\)"]],
+				display: options.delimiters && options.delimiters.display || [["\\[", "\\]"]],
+			},
+			ignore: {
+				tags: options.ignore && options.ignore.tags || [
+					"svg",
+					"script",
+					"noscript",
+					"style",
+					"textarea",
+					"pre",
+					"code"
+				],
+				classes: options.ignore && options.ignore.classes || false
+			},
+			mathjaxCompatibility: options.mathjaxCompatibility !== false,
+			macros: options.macros || {},
+			preamble: options.preamble || ''
 		};
 
-		let macros = {
-			"\\bbA": "{\\mathbb{A}}",
-			"\\bbB": "{\\mathbb{B}}",
-			"\\bbF": "{\\mathbb{F}}",
-			"\\bbN": "{\\mathbb{N}}",
-			"\\bbP": "{\\mathbb{P}}",
-			"\\bbQ": "{\\mathbb{Q}}",
-			"\\bbR": "{\\mathbb{R}}",
-			"\\bbZ": "{\\mathbb{Z}}",
-			"\\calA": "{\\mathcal{A}}",
-			"\\calB": "{\\mathcal{B}}",
-			"\\calC": "{\\mathcal{C}}",
-			"\\calD": "{\\mathcal{D}}",
-			"\\calF": "{\\mathcal{F}}",
-			"\\calG": "{\\mathcal{G}}",
-			"\\calI": "{\\mathcal{I}}",
-			"\\calM": "{\\mathcal{M}}",
-			"\\calN": "{\\mathcal{N}}",
-			"\\calO": "{\\mathcal{O}}",
-			"\\calR": "{\\mathcal{R}}",
-			"\\calS": "{\\mathcal{S}}",
-			"\\bfA": "{\\mathbf{A}}",
-			"\\bfa": "{\\mathbf{a}}",
-			"\\bfb": "{\\mathbf{b}}",
-			"\\bfc": "{\\mathbf{c}}",
-			"\\bfe": "{\\mathbf{e}}",
-			"\\bfw": "{\\mathbf{w}}",
-			"\\bfx": "{\\mathbf{x}}",
-			"\\bfy": "{\\mathbf{y}}",
-			"\\bfz": "{\\mathbf{z}}",
-			"\\floor": "{\\left\\lfloor #1 \\right\\rfloor}",
-			"\\ceil": "{\\left\\lceil #1 \\right\\rceil}",
-			"\\le": "\\leqslant",
-			"\\ge": "\\geqslant",
-			"\\hat": "\\widehat",
-			"\\emptyset": "\\varnothing",
-			"\\epsilon": "\\varepsilon",
-			"\\fragidx": "\\htmlClass{fragment fragidx-#1}{#2}",
-			"\\sfragidx": "\\htmlClass{fragment fade-in-then-semi-out fragidx-#1}{#2}",
-			"\\vfragidx": "\\rlap{\\class{fragment fade-in-then-out fragidx-#1}{#2}}",
-			"\\underbracket": "\\mathop{\\underset{\\mmlToken{mo}{⎵}}{#2}}\\limits_{#1}",
-			"\\next": "\\htmlClass{fragment}{#1}",
-			"\\step": "\\htmlClass{fragment fade-in-then-semi-out}{#1}",
-			"\\vstep": "\\rlap{\\htmlClass{fragment fade-in-then-out}{#1}}",
-			"\\zoomable": "\\htmlClass{zoomable}{#1}",
-			"\\green": "\\htmlClass{green}{#1}",
-			"\\red": "\\htmlClass{red}{#1}"
-		};
+		let macros = {};
 
 		for(let macroName in options.macros){
-			let macroDefinition = options.macros[macroName]
+			let macroDefinition = options.macros[macroName];
 			if(macroDefinition instanceof Array)
 				macroDefinition = macroDefinition[0];
 			if(!macroName.startsWith('\\'))
-				macroName = '\\' + macroName
+				macroName = '\\' + macroName;
 			macros[macroName] = macroDefinition;
 		}
+		if(options.fragments.enabled){
+			Object.assign(macros, {
+				"\\fragidx": "\\htmlClass{fragment fragidx-#1}{#2}",
+				"\\sfragidx": "\\htmlClass{fragment fade-in-then-semi-out fragidx-#1}{#2}",
+				"\\vfragidx": "\\rlap{\\htmlClass{fragment fade-in-then-out fragidx-#1}{#2}}",
+				"\\next": "\\htmlClass{fragment}{#1}",
+				"\\step": "\\htmlClass{fragment fade-in-then-semi-out}{#1}",
+				"\\vstep": "\\rlap{\\htmlClass{fragment fade-in-then-out}{#1}}"
+			});
+		}
+
+		let delimiters = [];
+		for (let pair of options.delimiters.display)
+			delimiters.push({left: pair[0], right: pair[1], display: true});
+		for (let pair of options.delimiters.inline)
+			delimiters.push({left: pair[0], right: pair[1], display: false});
+
 
 		let scriptsToLoad = [
 			{
 				url:
-				options.katexCssUrl,
+				options.urls.css,
 				condition:
 					!window.katex
-					&& !document.querySelector('script[src="' + options.katexUrl + '"]')
+					&& !document.querySelector('script[src="' + options.urls.katex + '"]')
 			}, {
 				url:
-				options.katexUrl,
+				options.urls.katex,
 				condition:
 					!window.katex
-					&& !document.querySelector('script[src="' + options.katexUrl + '"]')
+					&& !document.querySelector('script[src="' + options.urls.katex + '"]')
 			},{
 				url:
-				options.autorenderUrl,
+				options.urls.autorender,
 				condition:
 					!window.renderMathInElement
-					&& !document.querySelector('script[src="' + options.autorenderUrl + '"]')
+					&& !document.querySelector('script[src="' + options.urls.autorender + '"]')
 			}
 		];
 
 		function renderMath() {
 			window.addEventListener('load', function(){
-				window.renderMathInElement(
-					reveal.getViewportElement(),
-					{
-						delimiters: [
-							{left: "\\(", right: "\\)", display: false},
-							{left: "\\[", right: "\\]", display: true}
-						],
-						strict: false,
-						trust: true,
-						macros: macros
+				if(options.preamble || options.mathjaxCompatibility){
+					let script = document.querySelector(options.preamble);
+					let preamble = script ? script.innerText : options.preamble;
+					preamble = preamble.replace(/(?!\\)%.*$/mg, '');
+
+					if(options.mathjaxCompatibility) {
+						preamble = preamble.replace(/\\DeclareMathOperator\{(\\[^}]+)}\{([^\n+]+)}/g, "\\newcommand{$1}{\\operatorname{$2}}");
+						preamble += '\n\\newcommand{\\class}[2]{\\htmlClass{#1}{#2}}';
+						preamble += '\n\\newcommand{\\style}[2]{\\htmlStyle{#1}{#2}}';
+						preamble += '\n\\newcommand{\\cssId}[2]{\\htmlId{#1}{#2}}';
 					}
-				);
 
-				if(options.resetFragmentIndicesAfterTypeset || options.fragmentIndexCSS) {
+					try {
+						katex.renderToString(preamble, {
+							macros: macros,
+							throwOnError: true,
+							globalGroup: true,
+							strict: false,
+							trust: true
+						});
+					}
+					catch (error){
+						console.log("KaTeX error while loading the preamble: " + error.toString().replace("ParseError: KaTeX parse error: ", ""));
+					}
+				}
+
+				let renderOptions = {
+					delimiters: delimiters,
+					strict: false,
+					trust: true,
+					throwOnError: false,
+					macros: macros,
+					ignoredTags: options.ignore.tags
+				};
+				if(options.ignore.classes){
+					renderOptions.ignoredClasses = options.ignore.classes
+				}
+				window.renderMathInElement(reveal.getViewportElement(), renderOptions);
+
+				if(options.fragments.resetIndicesAfterTypeset || options.fragments.cssIndices) {
 					for(let slide of reveal.getSlides()){
-						for (let fragment of slide.querySelectorAll('.fragment'))
-							if (fragment.hasAttribute('data-fragment-index'))
-								fragment.removeAttribute('data-fragment-index');
-
-						for(let i = 0; i < 15; ++i) {
-							let fragments = slide.querySelectorAll('.fragment.fragidx-' + i.toString());
+						let resetDone = false;
+						for(let i = 1; i < options.fragments.maxFragments; ++i) {
+							let fragments = slide.querySelectorAll('.fragment.revealmathfragidx-' + i.toString() + ',.fragment.fragidx-' + i.toString());
+							if(!resetDone && (fragments.length > 0 || options.fragments.resetIndicesAfterTypeset)){
+								resetDone = true;
+								for(let fragment of slide.querySelectorAll('.fragment'))
+									if (fragment.hasAttribute('data-fragment-index'))
+										fragment.removeAttribute('data-fragment-index');
+							}
+							if(fragments.length === 0 && options.fragments.optimizeEnumeration)
+								break;
 							for(let fragment of fragments)
 								fragment.setAttribute('data-fragment-index', i);
 						}
 					}
 				}
+
 				reveal.layout();
 			});
 		}
