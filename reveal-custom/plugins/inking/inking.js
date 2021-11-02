@@ -1143,7 +1143,3 @@ const RevealInking = {
         return true;
     }
 };
-
-// Reveal.registerPlugin( 'revealInking', RevealInking );
-
-// export default () => RevealInking;

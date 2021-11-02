@@ -141,7 +141,7 @@ const RevealMath = {
 				if(options.fragments.enabled && (options.fragments.resetIndicesAfterTypeset || options.fragments.cssIndices)) {
 					let cssQuery = '';
 					for(let i = 1; i < options.fragments.maxFragments; ++i){
-						cssQuery += (cssQuery ? ',' : '') + '.fragment.' + options.fragments.indexClassPrefix + i.toString();
+						cssQuery += (cssQuery ? ',.' : '.') + options.fragments.indexClassPrefix + i.toString();
 					}
 
 					for(let slide of reveal.getSlides()){
@@ -149,15 +149,17 @@ const RevealMath = {
 						if(numFragmentsWithCssIndex > 0 && options.fragments.cssIndices || options.fragments.resetIndicesAfterTypeset){
 							for(let fragment of slide.querySelectorAll('.fragment[data-fragment-index]')) {
 								fragment.removeAttribute('data-fragment-index');
-								fragment.classList.remove('visible');
 							}
 						}
 
-						for(let i = 1; numFragmentsWithCssIndex > 0; ++i) {
-							let fragments = slide.querySelectorAll('.fragment.' + options.fragments.indexClassPrefix + i.toString());
-							for(let fragment of fragments) {
-								fragment.setAttribute('data-fragment-index', i.toString());
-								numFragmentsWithCssIndex -= 1;
+						if(options.fragments.cssIndices) {
+							for (let i = 1; numFragmentsWithCssIndex > 0; ++i) {
+								let fragments = slide.querySelectorAll('.' + options.fragments.indexClassPrefix + i.toString());
+								for (let fragment of fragments) {
+									fragment.classList.add('fragment');
+									fragment.setAttribute('data-fragment-index', i.toString());
+									numFragmentsWithCssIndex -= 1;
+								}
 							}
 						}
 					}
@@ -254,5 +256,3 @@ const RevealMath = {
 		return true;
 	}
 };
-
-// export default () => RevealInking;

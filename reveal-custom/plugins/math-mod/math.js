@@ -159,7 +159,7 @@ const RevealMath = {
                 return properties;
             }
 
-            function createSvgNode(textNode, targetProperties) {
+            function createBasicSvgMathNode(textNode){
                 let regexpInline = /^\s*([LCRBMT]{0,2})\s*\\\((.*)\\\)\s*$/i;
                 let regexpDisplay = /^\s*([LCRBMT]{0,2})\s*\\\[(.*)\\]\s*$/i;
                 let math = textNode.textContent.match(regexpInline);
@@ -186,14 +186,30 @@ const RevealMath = {
                 }
                 svgMath = svgMath.querySelector('svg');
 
+                return {
+                    width: svgMath.viewBox.baseVal.width,
+                    height: svgMath.viewBox.baseVal.height,
+                    hAlignment: hAlignment,
+                    vAlignment: vAlignment,
+                    gNode: svgMath.querySelector('g').cloneNode(true)
+                }
+            }
+
+            function createSvgMathNode(textNode) {
+                let svgMath = createBasicSvgMathNode(textNode);
+                if(!svgMath){
+                    return null;
+                }
+
+                let targetProperties = getTargetProperties(textNode);
                 let scale = options.svg.fixedScale || options.svg.mathScale * targetProperties.fontSize;
 
                 let x0 = targetProperties.x;
                 let y0 = targetProperties.y;
-                let x1 = (hAlignment === 'L' ? 0 : -svgMath.viewBox.baseVal.width) * (hAlignment === 'C' ? 0.5 : 1.0);
-                let y1 = (hAlignment === 'B' ? 0 : -svgMath.viewBox.baseVal.height) * (vAlignment === 'M' ? 0.5 : 1.0);
+                let x1 = (svgMath.hAlignment === 'L' ? 0 : -svgMath.width) * (svgMath.hAlignment === 'C' ? 0.5 : 1.0);
+                let y1 = (svgMath.vAlignment === 'B' ? 0 : -svgMath.height) * (svgMath.vAlignment === 'M' ? 0.5 : 1.0);
 
-                let gNode = svgMath.querySelector('g').cloneNode(true);
+                let gNode = svgMath.gNode;
                 gNode.setAttribute(
                     'transform',
                     'translate('+x0+' '+y0+')' + ' scale('+scale+') translate('+x1+' '+y1+')' + ' matrix(1 0 0 -1 0 0)'
@@ -226,7 +242,7 @@ const RevealMath = {
                 let hadMathInside = false;
                 let nodesForRemoval = [];
                 for(let tspanNode of textNode.getElementsByTagName('tspan')) {
-                    let gNode = createSvgNode(tspanNode, getTargetProperties(tspanNode));
+                    let gNode = createSvgMathNode(tspanNode);
                     if(!gNode){
                         continue;
                     }
@@ -235,17 +251,20 @@ const RevealMath = {
                     nodesForRemoval.push(tspanNode);
                 }
 
-                let gNode = createSvgNode(textNode, getTargetProperties(textNode));
-                if(options.svg.escapeClipping && (gNode || hadMathInside)){
-                    textNode.parentNode.removeAttribute('clip-path');
-                }
+                let gNode = createSvgMathNode(textNode);
                 if(gNode) {
+                    hadMathInside = true;
                     textNode.parentNode.insertBefore(gNode, textNode);
                     nodesForRemoval.push(textNode);
                 }
-                for(let node of nodesForRemoval){
-                    node.parentNode.removeChild(node);
+
+                if(options.svg.escapeClipping && hadMathInside){
+                    textNode.parentNode.removeAttribute('clip-path');
                 }
+
+                for(let node of nodesForRemoval)
+                    if(node && node.parentNode && node.parentNode.removeChild)
+                        node.parentNode.removeChild(node);
             }
         }
 
@@ -279,7 +298,7 @@ const RevealMath = {
             if(options.fragments.enabled && (options.fragments.resetIndicesAfterTypeset || options.fragments.cssIndices)) {
                 let cssQuery = '';
                 for(let i = 1; i < options.fragments.maxFragments; ++i){
-                    cssQuery += (cssQuery ? ',' : '') + '.fragment.' + options.fragments.indexClassPrefix + i.toString();
+                    cssQuery += (cssQuery ? ',.' : '.') + options.fragments.indexClassPrefix + i.toString();
                 }
 
                 for(let slide of reveal.getSlides()){
@@ -287,15 +306,17 @@ const RevealMath = {
                     if(numFragmentsWithCssIndex > 0 && options.fragments.cssIndices || options.fragments.resetIndicesAfterTypeset){
                         for(let fragment of slide.querySelectorAll('.fragment[data-fragment-index]')) {
                             fragment.removeAttribute('data-fragment-index');
-                            fragment.classList.remove('visible');
                         }
                     }
 
-                    for(let i = 1; numFragmentsWithCssIndex > 0; ++i) {
-                        let fragments = slide.querySelectorAll('.fragment.' + options.fragments.indexClassPrefix + i.toString());
-                        for(let fragment of fragments) {
-                            fragment.setAttribute('data-fragment-index', i.toString());
-                            numFragmentsWithCssIndex -= 1;
+                    if(options.fragments.cssIndices) {
+                        for (let i = 1; numFragmentsWithCssIndex > 0; ++i) {
+                            let fragments = slide.querySelectorAll('.' + options.fragments.indexClassPrefix + i.toString());
+                            for (let fragment of fragments) {
+                                fragment.classList.add('fragment');
+                                fragment.setAttribute('data-fragment-index', i.toString());
+                                numFragmentsWithCssIndex -= 1;
+                            }
                         }
                     }
                 }
@@ -314,7 +335,3 @@ const RevealMath = {
         return true;
     }
 };
-
-// Reveal.registerPlugin( 'revealMath', RevealMath );
-
-// export default () => RevealMath;
