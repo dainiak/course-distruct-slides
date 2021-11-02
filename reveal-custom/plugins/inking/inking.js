@@ -120,7 +120,7 @@ const RevealInking = {
             window.MathJax = {
                 options: {
                     renderActions: {
-                        addMenu: [0]
+                        addMenu: [0, '', '']
                     },
                     skipHtmlTags: [
                         "svg",
@@ -184,10 +184,6 @@ const RevealInking = {
                     }
                 }
             };
-        }
-
-        function toArray( o ) {
-            return Array.prototype.slice.call( o );
         }
 
         function isMathImage(fabricObject){
@@ -478,7 +474,7 @@ const RevealInking = {
                 targetScaleX = currentMathImage.scaleX / currentMathImage.mathMetadata.originalScaleX;
                 targetScaleY = currentMathImage.scaleY / currentMathImage.mathMetadata.originalScaleY;
                 currentMathColor = currentMathImage.mathMetadata.color;
-                currentFormula = currentMathImage.mathMetadata.latex;
+                currentFormula = currentMathImage.mathMetadata.texSrc;
             }
 
             let mathColor = (currentFormula && currentMathColor) || (options.math.color === 'ink' ? currentInkColor : options.math.color);
@@ -489,8 +485,7 @@ const RevealInking = {
                 mathRenderingDiv.style.position = 'fixed';
                 mathRenderingDiv.style.top = '0px';
                 mathRenderingDiv.style.left = '0px';
-                mathRenderingDiv.style.opacity = 0;
-                mathRenderingDiv.style.color = mathColor;
+                mathRenderingDiv.style.opacity = '0';
                 document.body.appendChild(mathRenderingDiv);
             }
 
@@ -514,14 +509,21 @@ const RevealInking = {
                 mathRenderingDiv.innerHTML = '';
                 let mjMetrics = MathJax.getMetricsFor(mathRenderingDiv, options.math.displayStyle);
 
-                mathRenderingDiv.appendChild(MathJax.tex2svg(
+                let svg = MathJax.tex2svg(
                     options.math.preamble + formula,
                     mjMetrics
-                ));
-                let svg = mathRenderingDiv.querySelector('mjx-container > svg');
+                );
+                if(!svg){
+                    return;
+                }
+                mathRenderingDiv.appendChild(svg);
+                svg = mathRenderingDiv.querySelector('mjx-container > svg');
+                let svgHeight = svg.height.baseVal.value;
+                let svgString = svg.outerHTML;
+                mathRenderingDiv.innerHTML = '';
 
                 window.fabric.loadSVGFromString(
-                    svg.outerHTML,
+                    svgString,
                     function(objects, extraInfo) {
                         for(let obj of objects){
                             obj.set({
@@ -532,12 +534,12 @@ const RevealInking = {
                         let img = window.fabric.util.groupSVGElements(objects, extraInfo).setCoords();
 
                         img.scaleToHeight(
-                            svg.height.baseVal.value * options.math.scaling
+                            svgHeight * options.math.scaling
                         );
 
                         img.set({
                             mathMetadata: {
-                                'latex': formula,
+                                'texSrc': formula,
                                 'color': mathColor,
                                 'originalScaleX': img.scaleX,
                                 'originalScaleY': img.scaleY
@@ -638,11 +640,13 @@ const RevealInking = {
                 });
             }
 
-            document.querySelector('.ink-hidecanvas').addEventListener('click',
+            document.querySelector('.ink-hidecanvas').addEventListener(
+                'click',
                 toggleCanvas
             );
 
-            document.querySelector('.ink-serializecanvas').addEventListener('click',
+            document.querySelector('.ink-serializecanvas').addEventListener(
+                'click',
                 serializeCanvasToFile
             );
 
@@ -797,6 +801,9 @@ const RevealInking = {
                 if(objects.length > 0) {
                     event.previousSlide.dataset.inkingCanvasContent = getMathEnrichedCanvasJSON();
                 }
+                else {
+                    event.previousSlide.dataset.inkingCanvasContent = null;
+                }
 
                 let slide = event.currentSlide;
                 canvas.clear();
@@ -825,40 +832,29 @@ const RevealInking = {
             destroySpotlight();
 
             let text, filename;
-            if(confirm("Save current slide to SVG? (Press Cancel to save current or all slides to JSON.)")) {
-                text = canvas.toSVG();
-                filename = 'canvas.svg';
-            }
-            else {
-                if(confirm("Save all slides content? (Press Cancel to save only the current slide.)")){
-                    filename = 'all_slides.json';
-                    reveal.getCurrentSlide().dataset.inkingCanvasContent = getMathEnrichedCanvasJSON();
-                    let allSlidesContent = [];
+            if(confirm("Save current slide to SVG? (Press Cancel to save current or all slides to JSON.)"))
+                return download('canvas.svg', canvas.toSVG());
 
-                    toArray(
-                        document.querySelectorAll('.reveal .slides section')
-                    ).forEach(function(slide, slideNumber){
-                        if(slide.dataset.inkingCanvasContent) {
-                            if(slide.id)
-                                allSlidesContent.push({
-                                    slideId: slide.id,
-                                    inkingCanvasContent: JSON.parse(slide.dataset.inkingCanvasContent)
-                                })
-                            else
-                                allSlidesContent.push({
-                                    slideNumber: slideNumber,
-                                    inkingCanvasContent: JSON.parse(slide.dataset.inkingCanvasContent)
-                                })
-                        }
-                    });
-                    text = JSON.stringify(allSlidesContent)
+            if(!confirm("Save all slides content? (Press Cancel to save only the current slide.)"))
+                return download('canvas.json', getMathEnrichedCanvasJSON());
+
+            reveal.getCurrentSlide().dataset.inkingCanvasContent = getMathEnrichedCanvasJSON();
+            let allSlidesContent = [];
+
+            Array.from(
+                document.querySelectorAll('.reveal .slides section')
+            ).forEach(function(slide, slideNumber){
+                if(slide.dataset.inkingCanvasContent) {
+                    let slideContent = {inkingCanvasContent: JSON.parse(slide.dataset.inkingCanvasContent)};
+                    if(slide.id)
+                        slideContent.slideId = slide.id;
+                    else
+                        slideContent.slideNumber = slideNumber;
+                    allSlidesContent.push(slideContent);
                 }
-                else {
-                    filename = 'canvas.json';
-                    text = getMathEnrichedCanvasJSON();
-                }
-            }
-            download(filename, text);
+            });
+
+            return download('all_slides.json', JSON.stringify(allSlidesContent));
         }
 
         function loadSVGFromURL(url, loadAsGroup){
@@ -875,7 +871,7 @@ const RevealInking = {
                         let group = new window.fabric.Group(objects);
                         canvas.add(group);
                     }
-                },
+                }
             );
         }
 
@@ -960,36 +956,42 @@ const RevealInking = {
                 }
             }
 
+            let wasCanvasVisible = isCanvasVisible();
+            let savedCanvasContent = getMathEnrichedCanvasJSON();
+            if(wasCanvasVisible){
+                toggleCanvas(false);
+            }
             for(let slide of document.querySelectorAll('section[data-inking-canvas-src]')) {
-                if(!slide.dataset.inkingCanvasSrc)
+                let inkingCanvasSrc = slide.dataset.inkingCanvasSrc;
+                if(!inkingCanvasSrc)
                     continue;
-                if(slide.dataset.inkingCanvasSrc.toLowerCase().endsWith('.svg')) {
-                    let inkingCanvasSrc = slide.dataset.inkingCanvasSrc;
+                if(slide.dataset.inkingCanvasSrc.toLowerCase().endsWith('.svg') || slide.dataset.inkingCanvasSrc.toLowerCase().endsWith('.svg:split')) {
+                    let tokens = inkingCanvasSrc.split('::');
+                    let path = '';
+                    let filenames = tokens;
 
-                    if(inkingCanvasSrc.includes('::')){
-                        let tokens = inkingCanvasSrc.split('::');
-                        let path = tokens[0];
-                        let extension = tokens[tokens.length-1];
-                        let filenames = tokens.slice(1, tokens.length-1);
-                        for(let filename of filenames){
-                            if(filename.endsWith('/')) {
-                                loadSVGFromURL(path + filename.slice(0, filename.length-1) + extension, false)
-                            }
-                            else {
-                                loadSVGFromURL(path + filename + extension, true);
-                            }
+                    if(tokens[0].endsWith('/')){
+                        path = tokens[0] ;
+                        filenames = tokens.slice(1, tokens.length);
+                    }
+
+                    canvas.clear();
+                    for(let filename of filenames){
+                        let makeGroup = true;
+                        if(filename.toLowerCase().endsWith(':split')){
+                            filename = filename.slice(0, filename.length-':split'.length);
+                            makeGroup = false;
                         }
+                        loadSVGFromURL(path + filename, makeGroup)
                     }
-                    else {
-                        loadSVGFromURL(inkingCanvasSrc, true);
-                    }
+
+                    slide.dataset.inkingCanvasContent = getMathEnrichedCanvasJSON();
                 }
                 else if(slide.dataset.inkingCanvasSrc.toLowerCase().endsWith('.json')) {
                     let xhr = new XMLHttpRequest();
                     let url = slide.dataset.inkingCanvasSrc;
 
                     xhr.onreadystatechange = function(xhr, url, slide) {
-
                         return function() {
                             if(xhr.readyState !== 4) {
                                 return;
@@ -1023,6 +1025,11 @@ const RevealInking = {
                     }
                 }
             }
+
+            if(wasCanvasVisible){
+                toggleCanvas(true);
+            }
+            loadCanvasFromMathEnrichedJSON(savedCanvasContent);
         }
 
         function loadScript(params, extraCallback) {
@@ -1138,7 +1145,6 @@ const RevealInking = {
                 });
             });
         });
-
 
         return true;
     }
