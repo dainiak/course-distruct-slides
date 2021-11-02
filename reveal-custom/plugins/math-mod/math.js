@@ -115,10 +115,10 @@ const RevealMath = {
                 }
 
                 let t = node;
-                while (!t.style.getPropertyValue('font-size') && t.parentNode && ['text', 'tspan'].includes(t.parentNode.tagName)) {
+                while (!t.style.fontSize && t.parentNode && (t.parentNode.tagName === 'text' || t.parentNode.tagName === 'tspan')) {
                     t = t.parentNode;
                 }
-                let fontSize = t.style.getPropertyValue('font-size');
+                let fontSize = t.style.fontSize;
                 properties.fontSize = fontSize ? +(fontSize.replace('px', '')) : 20
 
                 let defaultStyle = {
@@ -129,7 +129,7 @@ const RevealMath = {
 
                 for(let property of options.svg.inheritAttributes){
                     t = node;
-                    while (!t.style.getPropertyValue(property) && t.parentNode && ['text', 'tspan'].includes(t.parentNode.tagName)) {
+                    while (!t.style.getPropertyValue(property) && t.parentNode && (t.parentNode.tagName === 'text' || t.parentNode.tagName === 'tspan')) {
                         t = t.parentNode;
                     }
 
@@ -155,7 +155,7 @@ const RevealMath = {
                 }
             }
 
-            function processNode(textContent, targetProperties) {
+            function createNode(textContent, targetProperties) {
                 let regexpInline = /^\s*([LCRBMT]{0,2})\s*\\\((.*)\\\)\s*$/i;
                 let regexpDisplay = /^\s*([LCRBMT]{0,2})\s*\\\[(.*)\\]\s*$/i;
                 let math = textContent.match(regexpInline);
