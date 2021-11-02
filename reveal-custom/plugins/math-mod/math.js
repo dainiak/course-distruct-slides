@@ -115,7 +115,7 @@ const RevealMath = {
                 }
 
                 let t = node;
-                while (!t.style.fontSize && t.parentNode && (t.parentNode.tagName === 'text' || t.parentNode.tagName === 'tspan')) {
+                while (!t.style.fontSize && ['text', 'tspan'].includes((t.parentNode || {}).tagName)) {
                     t = t.parentNode;
                 }
                 let fontSize = t.style.fontSize;
@@ -129,7 +129,7 @@ const RevealMath = {
 
                 for(let property of options.svg.inheritAttributes){
                     t = node;
-                    while (!t.style.getPropertyValue(property) && t.parentNode && (t.parentNode.tagName === 'text' || t.parentNode.tagName === 'tspan')) {
+                    while(!t.style.getPropertyValue(property) && ['text', 'tspan'].includes((t.parentNode || {}).tagName)) {
                         t = t.parentNode;
                     }
 
@@ -139,27 +139,31 @@ const RevealMath = {
                     }
                 }
 
-                let classList = Array.from(t.classList);
-                if(classList !== undefined && (options.svg.inheritAttributes.includes('classlist') || options.svg.inheritAttributes.includes('classList'))){
-                    for(let cssClass of classList){
-                        textNode.classList.add(cssClass)
+                if(options.svg.inheritAttributes.includes('classlist') || options.svg.inheritAttributes.includes('classList')){
+                    t = node;
+                    properties.classList = Array.from(t.classList);
+                    while(['text', 'tspan'].includes((t.parentNode || {}).tagName)) {
+                        t = t.parentNode;
+                        Array.prototype.push.apply(properties.classList, Array.from(t.classList));
                     }
                 }
 
                 t = node;
-                while (!t.hasAttribute('id') && t.parentNode && ['text', 'tspan'].includes(t.parentNode.tagName)) {
+                while(!t.hasAttribute('id') && ['text', 'tspan'].includes((t.parentNode || {}).tagName)){
                     t = t.parentNode;
                 }
-                if(t && t.hasAttribute('id')){
+                if(t.hasAttribute('id')){
                     properties.id = t.getAttribute('id');
                 }
+
+                return properties;
             }
 
-            function createNode(textContent, targetProperties) {
+            function createSvgNode(textNode, targetProperties) {
                 let regexpInline = /^\s*([LCRBMT]{0,2})\s*\\\((.*)\\\)\s*$/i;
                 let regexpDisplay = /^\s*([LCRBMT]{0,2})\s*\\\[(.*)\\]\s*$/i;
-                let math = textContent.match(regexpInline);
-                let displayMath = textContent.match(regexpDisplay);
+                let math = textNode.textContent.match(regexpInline);
+                let displayMath = textNode.textContent.match(regexpDisplay);
                 let isDisplay = false;
                 if(displayMath){
                     isDisplay = true;
@@ -186,8 +190,8 @@ const RevealMath = {
 
                 let x0 = targetProperties.x;
                 let y0 = targetProperties.y;
-                let x1 = (hAlignment === 'L' ? 0 : -svgMath.viewBox.baseVal.width) * (hAlignment === 'C' ? 0.5 : 1);
-                let y1 = (hAlignment === 'B' ? 0 : -svgMath.viewBox.baseVal.height) * (vAlignment === 'M' ? 0.5 : 1);
+                let x1 = (hAlignment === 'L' ? 0 : -svgMath.viewBox.baseVal.width) * (hAlignment === 'C' ? 0.5 : 1.0);
+                let y1 = (hAlignment === 'B' ? 0 : -svgMath.viewBox.baseVal.height) * (vAlignment === 'M' ? 0.5 : 1.0);
 
                 let gNode = svgMath.querySelector('g').cloneNode(true);
                 gNode.setAttribute(
@@ -197,12 +201,13 @@ const RevealMath = {
 
                 for(let property in targetProperties.style){
                     let value = targetProperties.style[property];
-                    if(value){
-                        gNode.style.setProperty(property, value);
-                        if(options.svg.inheritRecursively) {
-                            for (let g of gNode.querySelectorAll('g,path')) {
-                                g.style.setProperty(property, value);
-                            }
+                    if(!value) {
+                        continue;
+                    }
+                    gNode.style.setProperty(property, value);
+                    if(options.svg.inheritRecursively) {
+                        for (let g of gNode.querySelectorAll('g,path')) {
+                            g.style.setProperty(property, value);
                         }
                     }
                 }
@@ -211,37 +216,35 @@ const RevealMath = {
                     gNode.classList.add(cssClass);
                 }
                 if(targetProperties.id){
-                    gNode.id = id;
+                    gNode.id = targetProperties.id;
                 }
 
                 return gNode;
             }
 
             for(let textNode of document.querySelectorAll('svg text')) {
-                let tspanNodes = textNode.getElementsByTagName('tspan');
-                for(let tspanNode of tspanNodes) {
-                    for(let coord of ['x', 'y'])
-                        if(!tspanNode.hasAttribute(coord))
-                            tspanNode.setAttribute(coord, tspanNode.parentElement.getAttribute(coord));
-                    for(let attrName of ['font-size', 'stroke', 'fill', 'fill-opacity']) {
-                        if(!(tspanNode.hasAttribute(attrName) || tspanNode.style.getPropertyValue(attrName))) {
-                            let value = tspanNode.parentElement.style.getPropertyValue(attrName) || tspanNode.parentElement.getAttribute(attrName);
-                            if(value !== undefined && value !== null) {
-                                tspanNode.style.setProperty(attrName, value);
-                            }
-                        }
+                let hadMathInside = false;
+                let nodesForRemoval = [];
+                for(let tspanNode of textNode.getElementsByTagName('tspan')) {
+                    let gNode = createSvgNode(tspanNode, getTargetProperties(tspanNode));
+                    if(!gNode){
+                        continue;
                     }
-                    processNode(tspanNode, textNode.parentElement);
-                    if(options.svg.escapeClipping) {
-                        tspanNode.parentNode.removeAttribute('clip-path');
-                    }
+                    hadMathInside = true;
+                    textNode.parentNode.insertBefore(gNode, textNode);
+                    nodesForRemoval.push(tspanNode);
                 }
 
-                if(tspanNodes.length === 0) {
-                    processNode(textNode, textNode.parentElement);
-                    if(options.svg.escapeClipping) {
-                        textNode.parentNode.removeAttribute('clip-path');
-                    }
+                let gNode = createSvgNode(textNode, getTargetProperties(textNode));
+                if(options.svg.escapeClipping && (gNode || hadMathInside)){
+                    textNode.parentNode.removeAttribute('clip-path');
+                }
+                if(gNode) {
+                    textNode.parentNode.insertBefore(gNode, textNode);
+                    nodesForRemoval.push(textNode);
+                }
+                for(let node of nodesForRemoval){
+                    node.parentNode.removeChild(node);
                 }
             }
         }
