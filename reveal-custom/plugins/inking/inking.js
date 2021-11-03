@@ -517,7 +517,7 @@ const RevealInking = {
                     return;
                 }
                 mathRenderingDiv.appendChild(svg);
-                svg = mathRenderingDiv.querySelector('mjx-container > svg');
+                svg = mathRenderingDiv.querySelector('svg');
                 let svgHeight = svg.height.baseVal.value;
                 let svgString = svg.outerHTML;
                 mathRenderingDiv.innerHTML = '';
@@ -890,6 +890,44 @@ const RevealInking = {
             )
         }
 
+        function sendAjaxRequest(url, params, callback){
+            let xhr = new XMLHttpRequest();
+
+            xhr.onreadystatechange = function( xhr, url, params  ) {
+                return function() {
+                    if ( xhr.readyState !== 4 ) {
+                        return;
+                    }
+                    if (!
+                        (( xhr.status >= 200 && xhr.status < 300 ) ||
+                            ( xhr.status === 0 && xhr.responseText !== '')
+                        )) {
+                        console.log(
+                            'ERROR: The attempt to fetch ' + url +
+                            ' failed with HTTP status ' + xhr.status + '.'
+                        );
+
+                        return;
+                    }
+
+                    callback(xhr.responseText.trim(), params)
+                };
+            }( xhr, url, params );
+
+            xhr.open( "GET", url, false );
+            try {
+                xhr.send();
+            }
+            catch ( e ) {
+                console.log(
+                    'Failed to get the file ' + url +
+                    '. Make sure that the presentation and the file are served by a ' +
+                    'HTTP server and the file can be found there. ' + e
+                );
+            }
+        }
+
+
         function loadPredefinedCanvasContent(){
             if(options.inkingCanvasContent) {
                 let slides = document.querySelectorAll('.reveal .slides section');
@@ -915,47 +953,15 @@ const RevealInking = {
                 else if (typeof options.inkingCanvasContent === "string"){
                     if(options.inkingCanvasContent.toLowerCase().endsWith('.json')){
                         let url = options.inkingCanvasContent;
-                        let xhr = new XMLHttpRequest();
-
-                        xhr.onreadystatechange = function( xhr, url, slides  ) {
-                            return function() {
-                                if ( xhr.readyState !== 4 ) {
-                                    return;
-                                }
-                                if (!
-                                    (( xhr.status >= 200 && xhr.status < 300 ) ||
-                                        ( xhr.status === 0 && xhr.responseText !== '')
-                                    )) {
-                                    console.log(
-                                        'ERROR: The attempt to fetch ' + url +
-                                        ' failed with HTTP status ' + xhr.status + '.'
-                                    );
-
-                                    return;
-                                }
-
-                                let text = xhr.responseText.trim();
-                                if(text.startsWith('{')) {
-                                    for (let slide of slides)
-                                        slide.dataset.inkingCanvasContent = text;
-                                }
-                                else {
-                                    loadMultipleSlides(JSON.parse(text));
-                                }
-                            };
-                        }( xhr, url, slides );
-
-                        xhr.open( "GET", url, false );
-                        try {
-                            xhr.send();
-                        }
-                        catch ( e ) {
-                            console.log(
-                                'Failed to get the file ' + url +
-                                '. Make sure that the presentation and the file are served by a ' +
-                                'HTTP server and the file can be found there. ' + e
-                            );
-                        }
+                        sendAjaxRequest(url, slides, function (response, slides){
+                            if(response.startsWith('{')) {
+                                for (let slide of slides)
+                                    slide.dataset.inkingCanvasContent = response;
+                            }
+                            else {
+                                loadMultipleSlides(JSON.parse(response));
+                            }
+                        });
                     }
                     else {
                         for(let slide of slides){
@@ -1003,41 +1009,10 @@ const RevealInking = {
                     slide.dataset.inkingCanvasContent = getMathEnrichedCanvasJSON();
                 }
                 else if(inkingCanvasSrc.toLowerCase().endsWith('.json')) {
-                    let xhr = new XMLHttpRequest();
                     let url = inkingCanvasSrc;
-
-                    xhr.onreadystatechange = function(xhr, url, slide) {
-                        return function() {
-                            if(xhr.readyState !== 4) {
-                                return;
-                            }
-                            if (!
-                                (( xhr.status >= 200 && xhr.status < 300 ) ||
-                                    ( xhr.status === 0 && xhr.responseText !== '')
-                                )) {
-                                console.log(
-                                    'ERROR: The attempt to fetch ' + url +
-                                    ' failed with HTTP status ' + xhr.status + '.'
-                                );
-
-                                return;
-                            }
-
-                            slide.dataset.inkingCanvasContent = xhr.responseText;
-                        };
-                    }( xhr, url, slide );
-
-                    xhr.open( "GET", url, false );
-                    try {
-                        xhr.send();
-                    }
-                    catch ( e ) {
-                        console.log(
-                            'Failed to get the file ' + url +
-                            '. Make sure that the presentation and the file are served by a ' +
-                            'HTTP server and the file can be found there. ' + e
-                        );
-                    }
+                    sendAjaxRequest(url, slide, function (response, slide){
+                        slide.dataset.inkingCanvasContent = xhr.responseText;
+                    });
                 }
             }
 
