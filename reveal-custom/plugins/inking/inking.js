@@ -965,7 +965,7 @@ const RevealInking = {
                 let inkingCanvasSrc = slide.dataset.inkingCanvasSrc;
                 if(!inkingCanvasSrc)
                     continue;
-                if(slide.dataset.inkingCanvasSrc.toLowerCase().endsWith('.svg') || slide.dataset.inkingCanvasSrc.toLowerCase().endsWith('.svg:split')) {
+                if(inkingCanvasSrc.toLowerCase().endsWith('.svg') || inkingCanvasSrc.toLowerCase().endsWith('.svg:split')) {
                     let tokens = inkingCanvasSrc.split('::');
                     let path = '';
                     let filenames = tokens;
@@ -982,14 +982,14 @@ const RevealInking = {
                             filename = filename.slice(0, filename.length-':split'.length);
                             makeGroup = false;
                         }
-                        loadSVGFromURL(path + filename, makeGroup)
+                        loadSVGFromURL(path + filename, makeGroup);
                     }
 
                     slide.dataset.inkingCanvasContent = getMathEnrichedCanvasJSON();
                 }
-                else if(slide.dataset.inkingCanvasSrc.toLowerCase().endsWith('.json')) {
+                else if(inkingCanvasSrc.toLowerCase().endsWith('.json')) {
                     let xhr = new XMLHttpRequest();
-                    let url = slide.dataset.inkingCanvasSrc;
+                    let url = inkingCanvasSrc;
 
                     xhr.onreadystatechange = function(xhr, url, slide) {
                         return function() {
