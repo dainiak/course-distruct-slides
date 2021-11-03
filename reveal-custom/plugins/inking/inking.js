@@ -871,27 +871,23 @@ const RevealInking = {
                         return;
                     }
 
-                    for(let obj of objects) {
-                        setCanvasObjectDefaults(obj);
-                    }
+                    let objectsToAdd = objects;
+                    if(loadAsGroup && objects.length > 1)
+                        objectsToAdd = [new window.fabric.Group(objects)];
+                    else
+                        for(let obj of objectsToAdd)
+                            setCanvasObjectDefaults(obj);
 
-                    let objectsToAdd = loadAsGroup ? [new window.fabric.Group(objects)]: objects;
-                    if(slide.inkingObjectsPreload === undefined){
-                        slide.inkingObjectsPreload = objectsToAdd;
-                    }
-                    else {
-                        for(let obj in objectsToAdd) {
-                            slide.inkingObjectsPreload.push(obj);
-                        }
-                    }
-
-                    if(slide === reveal.getCurrentSlide()) {
-                        for(let obj in objectsToAdd) {
+                    if(slide === reveal.getCurrentSlide())
+                        for(let obj of objectsToAdd)
                             canvas.add(obj);
-                        }
-                    }
+                    else if(!slide.inkingObjectsPreload)
+                        slide.inkingObjectsPreload = objectsToAdd;
+                    else
+                        for(let obj of objectsToAdd)
+                            slide.inkingObjectsPreload.push(obj);
                 }
-            );
+            )
         }
 
         function loadPredefinedCanvasContent(){
