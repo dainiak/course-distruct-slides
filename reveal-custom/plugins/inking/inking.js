@@ -810,6 +810,12 @@ const RevealInking = {
                 if(slide.dataset.inkingCanvasContent){
                     setTimeout(function(){
                         loadCanvasFromMathEnrichedJSON(slide.dataset.inkingCanvasContent);
+                        if(slide.inkingObjectsPreload){
+                            for(let obj of slide.inkingObjectsPreload){
+                                canvas.add(obj);
+                            }
+                            slide.inkingObjectsPreload = null;
+                        }
                     }, parseInt(window.getComputedStyle(slide).transitionDuration) || 800);
                 }
                 leaveDeletionMode();
@@ -857,19 +863,32 @@ const RevealInking = {
             return download('all_slides.json', JSON.stringify(allSlidesContent));
         }
 
-        function loadSVGFromURL(url, loadAsGroup){
+        function loadSVGFromURL(slide, url, loadAsGroup){
             window.fabric.loadSVGFromURL(
                 url,
                 function (objects) {
+                    if(!objects){
+                        return;
+                    }
+
                     for(let obj of objects) {
                         setCanvasObjectDefaults(obj);
-                        if(!loadAsGroup) {
-                            canvas.add(obj);
+                    }
+
+                    let objectsToAdd = loadAsGroup ? [new window.fabric.Group(objects)]: objects;
+                    if(slide.inkingObjectsPreload === undefined){
+                        slide.inkingObjectsPreload = objectsToAdd;
+                    }
+                    else {
+                        for(let obj in objectsToAdd) {
+                            slide.inkingObjectsPreload.push(obj);
                         }
                     }
-                    if(loadAsGroup) {
-                        let group = new window.fabric.Group(objects);
-                        canvas.add(group);
+
+                    if(slide === reveal.getCurrentSlide()) {
+                        for(let obj in objectsToAdd) {
+                            canvas.add(obj);
+                        }
                     }
                 }
             );
@@ -982,7 +1001,7 @@ const RevealInking = {
                             filename = filename.slice(0, filename.length-':split'.length);
                             makeGroup = false;
                         }
-                        loadSVGFromURL(path + filename, makeGroup);
+                        loadSVGFromURL(slide, path + filename, makeGroup);
                     }
 
                     slide.dataset.inkingCanvasContent = getMathEnrichedCanvasJSON();
