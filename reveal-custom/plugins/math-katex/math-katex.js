@@ -59,7 +59,7 @@ const RevealMath = {
 		}
 
 		let delimiters = [];
-		for (let pair of options.delimiters.display)
+		for (let pair of options.delimiters.display) // Making sure $$…$$ is pushed before $…$
 			delimiters.push({left: pair[0], right: pair[1], display: true});
 		for (let pair of options.delimiters.inline)
 			delimiters.push({left: pair[0], right: pair[1], display: false});
