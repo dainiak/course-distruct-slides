@@ -1,110 +1,110 @@
-<section data-menu-title="Примитивные элементы в полях">
+<section data-menu-title="Primitive elements in fields">
     <div class="lemma fragment">
-        <div class="title">Лемма “\(>0\implies =\euler\)”</div>
-        <div class="statement">Если в \(\Fstar\) есть элементы порядка \(k,\) то их ровно \(\euler(k).\)</div>
+        <div class="title">Lemma "\(>0\implies =\euler\)"</div>
+        <div class="statement">If there are elements of order \(k\) in \(\Fstar\), then there are exactly \(\euler(k)\) of them.</div>
     </div>
     <div class="proof fragment">
         <hr>
-        <div class="title">Доказательство.</div>
+        <div class="title">Proof.</div>
         <p class="fragment">
-            Пусть \(\ord a = k\). Пусть \(A:=\{a^0,\,\dots,\,a^{k-1}\}\).
+            Let \(\ord a = k\). Let \(A:=\{a^0,\,\dots,\,a^{k-1}\}\).
         </p>
         <p class="fragment">
-            Пусть \(P(x):= x^k - 1\). Для \(a^j\in A\) имеем
+            Let \(P(x):= x^k - 1\). For \(a^j\in A\) we have
             \[
-                P(a^j)  = (a^j)^k - 1
-                \next{  = (a^k)^j - 1   }
-                \next{  = 1^j - 1  = 0, }
+            P(a^j)  = (a^j)^k - 1
+            \next{  = (a^k)^j - 1   }
+            \next{  = 1^j - 1  = 0, }
             \]
         </p>
         <p class="fragment">
-            то есть \(A\subseteq \roots(P)\).
+            that is \(A\subseteq \roots(P)\).
         </p>
         <p class="fragment">
-            Так как \(|A|=k=\deg P\), то \(\roots(P) = A\).
+            Since \(|A|=k=\deg P\), then \(\roots(P) = A\).
         </p>
     </div>
 </section>
 
-<section data-menu-title="(продолжение)">
+<section data-menu-title="(continuation)">
     <div class="proof">
         <p>
-            Пусть \(\ord a = k\). Пусть \(K:=\{a\in\Fstar:\: \ord a = k\}\).
-            Тогда \(K\subseteq \{a^0,\,\dots,\,a^{k-1}\}\).
+            Let \(\ord a = k\). Let \(K:=\{a\in\Fstar:\: \ord a = k\}\).
+            Then \(K\subseteq \{a^0,\,\dots,\,a^{k-1}\}\).
         </p>
         <p class="fragment">
-            Если \(m\le k\) и \(\GCD(m,\,k) = 1\), то
-                \[\forall\ell\; (\ell \lt k \implies (a^m)^\ell \neq 1),\]
-            иначе было бы \(a^{\ell m} = 1\) при том, что \(\ord a \notdivides \ell m\).
+            If \(m\le k\) and \(\GCD(m,\,k) = 1\), then
+            \[\forall\ell\; (\ell \lt k \implies (a^m)^\ell \neq 1),\]
+            otherwise we would have \(a^{\ell m} = 1\) while \(\ord a \notdivides \ell m\).
         </p>
         <p class="fragment">
-            Видно теперь, что \[K=\{a^m\mid \GCD(m,\,k) = 1\},\]
-            а значит, \(\card K = \euler(k).\)
+            It is now clear that \[K=\{a^m\mid \GCD(m,\,k) = 1\},\]
+            and therefore, \(\card K = \euler(k).\)
         </p>
     </div>
 </section>
 
 
-<section data-menu-title="Сумма значений функции Эйлера">
+<section data-menu-title="Sum of values of Euler's function">
     <div class="lemma">
-        <div class="title">Сумма значений функции Эйлера</div>
+        <div class="title">Sum of values of Euler's function</div>
         <div class="statement">
-            Для любого \(n\) имеем
+            For any \(n\) we have
             \[
-                \sum_{k:\:k\divides n}\euler(k)=n.
+            \sum_{k:\:k\divides n}\euler(k)=n.
             \]
         </div>
     </div>
     <hr>
     <div class="proof fragment">
-        <div class="title">Доказательство: сокращаем дроби!</div>
-        <p>Имеем \(n=\card\calN\), где
-        \[\calN=\bigl\{\tfrac{1}{n},\,\tfrac{2}{n},\,\dots,\,\tfrac{n}{n}\bigr\}\]</p>
+        <div class="title">Proof: reduce fractions!</div>
+        <p>We have \(n=\card\calN\), where
+            \[\calN=\bigl\{\tfrac{1}{n},\,\tfrac{2}{n},\,\dots,\,\tfrac{n}{n}\bigr\}\]</p>
         <p class="fragment">
-            Видим, что ровно \(\euler(k)\) элементов множества \(\calN\)
-            представимы несократимыми дробями со знаменателем \(k\) (и, конечно, \(k\divides n\)).
+            We see that exactly \(\euler(k)\) elements of set \(\calN\)
+            can be represented as irreducible fractions with denominator \(k\) (and, of course, \(k\divides n\)).
         </p>
     </div>
 </section>
 
-<section data-menu-title="Какие бывают порядки элементов">
+<section data-menu-title="What orders of elements are possible">
     <div class="proof">
-        <p>Пусть  \(\calO:=\{\ord a\mid a\in \Fstar\}\),  и  \(n:=\card\Fstar\).</p>
+        <p>Let \(\calO:=\{\ord a\mid a\in \Fstar\}\), and \(n:=\card\Fstar\).</p>
         <p>
-            Очевидно, \(\calO\subseteq D_n = \{ d:\: d\divides n \}\).
+            Obviously, \(\calO\subseteq D_n = \{ d:\: d\divides n \}\).
             \[
-                |\Fstar| = \sum_{k\in \calO} \euler(k) \next{\green{\le} \sum_{k\in D_n} \euler(k)=\card\Fstar,}
+            |\Fstar| = \sum_{k\in \calO} \euler(k) \next{\green{\le} \sum_{k\in D_n} \euler(k)=\card\Fstar,}
             \]
-            <span class="fragment">а стало быть, \(\calO=D_n\).</span>
+            <span class="fragment">and therefore, \(\calO=D_n\).</span>
         </p>
     </div>
 </section>
 
-<section data-menu-title="Существование примитивных элементов">
+<section data-menu-title="Existence of primitive elements">
     <div class="theorem">
-        <div class="title">Теорема</div>
+        <div class="title">Theorem</div>
         <div class="statement">
-            В любом поле \(\bbF\) есть <span class="term">примитивный элемент</span>,
-            то есть такой \(\alpha\in\Fstar\), что \[
+            In any field \(\bbF\) there exists a <span class="term">primitive element</span>,
+            that is, such an \(\alpha\in\Fstar\) that \[
             \Fstar = \{\alpha^0,\,\alpha^1,\,\dots,\,\alpha^{\card\Fstar-1}\}.
             \]
         </div>
     </div>
     <div class="proof fragment">
-        <div class="title">Доказательство.</div>
+        <div class="title">Proof.</div>
         <p>
-            Количество элементов порядка \(\card\Fstar\) равно \(\euler(\card\Fstar)\ge 1\).
+            The number of elements of order \(\card\Fstar\) equals \(\euler(\card\Fstar)\ge 1\).
         </p>
     </div>
 </section>
 
-<section data-menu-title="Дискретное логарифмирование">
+<section data-menu-title="Discrete logarithm">
     <div class="proposition">
         <div class="statement">
-            Если в конечном поле зафиксировать примитивный элемент \(\alpha,\)
-            то для любого \(x\in \bbF\setminus\{0\}\) можно корректно определить
-            <span class="term">дискретный логарифм</span>: \(\log_\alpha x \), обладающий
-            некоторыми свойствами обычного логарифма:
+            If we fix a primitive element \(\alpha\) in a finite field,
+            then for any \(x\in \bbF\setminus\{0\}\) we can properly define
+            the <span class="term">discrete logarithm</span>: \(\log_\alpha x \), which has
+            some properties of the usual logarithm:
             <ul>
                 <li class="fragment">\(\log_\alpha (xy)=(\log_\alpha x + \log_\alpha y)\vstep{?}\next{\bmod \card\Fstar,}\)</li>
                 <li class="fragment">\(x^{\log_\alpha y}=y^{\log_\alpha x},\)</li>

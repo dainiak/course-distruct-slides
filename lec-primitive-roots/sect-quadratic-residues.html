@@ -1,45 +1,45 @@
-<section data-menu-title="Квадратичные вычеты">
+<section data-menu-title="Quadratic residues">
     <div class="definition">
         <div class="statement">
-            <span class="term">Квадратичным вычетом</span> в поле \(\bbF\) элемент \(y \in \Fstar\),
-            такой, что \(y=x^2\) для какого-нибудь \(x\in\bbF\).
+            A <span class="term">quadratic residue</span> in field \(\bbF\) is an element \(y \in \Fstar\),
+            such that \(y=x^2\) for some \(x\in\bbF\).
         </div>
     </div>
     <hr>
     <div class="definition fragment">
         <div class="statement">
-            <span class="term">Символ Лежандра</span> \(\chi\) — это функция \(\bbF\to \{-1,\,0,\,1\}\), где
+            The <span class="term">Legendre symbol</span> \(\chi\) is a function \(\bbF\to \{-1,\,0,\,1\}\), where
             \[\chi(x)=\begin{cases}
-                \phantom{-}0,\,\text{если } x = 0, \\
-                -1,\, \text{если } x \text{ квадратичный невычет},\\
-                \phantom{-}1,\, \text{если } x \text{ квадратичный вычет}.
+            \phantom{-}0,\,\text{if } x = 0, \\
+            -1,\, \text{if } x \text{ is a quadratic non-residue},\\
+            \phantom{-}1,\, \text{if } x \text{ is a quadratic residue}.
             \end{cases}\]
         </div>
     </div>
 </section>
 
-<section data-menu-title="Количество квадратичных вычетов">
+<section data-menu-title="Number of quadratic residues">
     <div class="theorem fragment">
-        <div class="title">Количество квадратичных вычетов</div>
+        <div class="title">Number of quadratic residues</div>
         <div class="statement">
-            В любом поле \(\bbF\) при \(2\notdivides\card\bbF\)
-            ровно половина элементов \(\Fstar\) квадратичные вычеты.
+            In any field \(\bbF\) where \(2\notdivides\card\bbF\),
+            exactly half of the elements in \(\Fstar\) are quadratic residues.
         </div>
     </div>
     <hr>
     <div class="theorem fragment">
-        <div class="title">Мультипликативность символа Лежандра</div>
+        <div class="title">Multiplicativity of the Legendre symbol</div>
         <div class="statement">
-            При \(2\notdivides\card\bbF\) для любых \(a,b\in\bbF\)
-            имеем \(\chi(ab)=\chi(a)\cdot \chi(b)\).
+            When \(2\notdivides\card\bbF\), for any \(a,b\in\bbF\)
+            we have \(\chi(ab)=\chi(a)\cdot \chi(b)\).
         </div>
     </div>
     <hr>
     <div class="proof fragment">
         <p>
-            Вытекает из того, что если \(\alpha\in\bbF\) — примитивный элемент,
-            то <br>\(\alpha^0,\,\alpha^2,\,\dots\) — квадратичные вычеты,
-            <br>\(\alpha^1,\,\alpha^3,\,\dots\) — квадратичные невычеты.
+            This follows from the fact that if \(\alpha\in\bbF\) is a primitive element,
+            then <br>\(\alpha^0,\,\alpha^2,\,\dots\) are quadratic residues,
+            <br>\(\alpha^1,\,\alpha^3,\,\dots\) are quadratic non-residues.
         </p>
     </div>
 </section>
